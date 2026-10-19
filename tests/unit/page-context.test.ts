@@ -174,3 +174,137 @@ describe("contextExpression", () => {
     }
   });
 });
+
+/**
+ * ADR-0021: role-less clickable controls. Grafana 9.5.21's visualization picker
+ * card is a `<div aria-label="Plugin visualization item Stat">` with a script
+ * click handler and no role. Before ADR-0021 it matched no selector, so neither
+ * model could see it — the fresh baseline went 0/5, never selecting Stat.
+ */
+describe("role-less labelled controls (ADR-0021)", () => {
+  let browser: Browser;
+  let page: Page;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+    await page.setContent(`<!doctype html><html><body><main>
+      <button aria-label="toggle-viz-picker">Visualization</button>
+      <div aria-label="Plugin visualization item Stat" style="cursor:pointer"
+           onclick="document.title='stat-picked'">Stat ${BODY_TEXT}</div>
+      <div aria-label="TestData series count">
+        <input aria-label="Series count" value="${TYPED_VALUE}">
+      </div>
+      <div aria-label="Hidden card" style="cursor:pointer;display:none">x</div>
+    </main></body></html>`);
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("admits a clickable role-less element as role 'generic', named by its aria-label", async () => {
+    const { elements } = await capturePageState(page, "interactive");
+    expect(elements).toContainEqual({ role: "generic", name: "Plugin visualization item Stat" });
+  });
+
+  it("keeps a labelled NON-clickable wrapper out — only controls are offered", async () => {
+    const { elements } = await capturePageState(page, "interactive");
+    expect((elements ?? []).map((e) => e.name)).not.toContain("TestData series count");
+  });
+
+  it("still respects visibility for the new elements", async () => {
+    const { elements } = await capturePageState(page, "interactive");
+    expect((elements ?? []).map((e) => e.name)).not.toContain("Hidden card");
+  });
+
+  it("never reads text content or a value for them — the name is the aria-label alone", async () => {
+    const serialized = JSON.stringify(await capturePageState(page, "interactive"));
+    expect(serialized).not.toContain(BODY_TEXT);
+    expect(serialized).not.toContain(TYPED_VALUE);
+  });
+
+  it("keeps document order, so a generic element sits among its neighbours", async () => {
+    const { elements } = await capturePageState(page, "interactive");
+    const names = (elements ?? []).map((e) => e.name);
+    expect(names.indexOf("toggle-viz-picker")).toBeLessThan(names.indexOf("Plugin visualization item Stat"));
+    expect(names.indexOf("Plugin visualization item Stat")).toBeLessThan(names.indexOf("Series count"));
+  });
+
+  it("captured generic elements are targetable: role_name + generic resolves and clicks", async () => {
+    const { resolveWithFallback } = await import("../../src/runner/locators.js");
+    const loc = await resolveWithFallback(page, [
+      { strategy: "role_name", role: "generic", name: "Plugin visualization item Stat" },
+    ]);
+    await loc.click();
+    expect(await page.title()).toBe("stat-picked");
+  });
+
+  it("landmarks level is still empty", async () => {
+    const { elements } = await capturePageState(page, "landmarks");
+    expect(elements ?? []).toEqual([]);
+  });
+});
+
+/**
+ * ADR-0021, second half — found by a logged fresh-baseline attempt on live
+ * 9.5.21 that spent 19 of 30 turns on two fields: "Series count" (an
+ * input[type=number] the capture called "textbox") and the panel title (an
+ * input with no accessible name at all).
+ */
+describe("truthful roles and container-named controls (ADR-0021)", () => {
+  let browser: Browser;
+  let page: Page;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+    await page.setContent(`<!doctype html><html><body><main>
+      <div aria-label="TestData series count"><input type="number" aria-label="Series count" value="${TYPED_VALUE}"></div>
+      <input type="range" aria-label="Opacity">
+      <input type="search" aria-label="Search dashboards">
+      <div aria-label="Panel options Title field property editor">
+        <label>Title</label><div><input type="text" id="panel-title" value="${TYPED_VALUE}"></div>
+      </div>
+      <div aria-label="Panel options Description field property editor">
+        <div><textarea id="panel-desc"></textarea></div>
+      </div>
+    </main></body></html>`);
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("reports the ARIA implicit role for number, range and search inputs", async () => {
+    const { elements } = await capturePageState(page, "interactive");
+    expect(elements).toContainEqual({ role: "spinbutton", name: "Series count" });
+    expect(elements).toContainEqual({ role: "slider", name: "Opacity" });
+    expect(elements).toContainEqual({ role: "searchbox", name: "Search dashboards" });
+  });
+
+  it("an unnamed control takes its nearest labelled container's aria-label as its name", async () => {
+    const { elements } = await capturePageState(page, "interactive");
+    expect(elements).toContainEqual({ role: "textbox", name: "Panel options Title field property editor" });
+    expect(elements).toContainEqual({ role: "textbox", name: "Panel options Description field property editor" });
+    expect((elements ?? []).some((e) => e.role === "textbox" && e.name === "")).toBe(false);
+  });
+
+  it("still never carries a value", async () => {
+    expect(JSON.stringify(await capturePageState(page, "interactive"))).not.toContain(TYPED_VALUE);
+  });
+
+  it("every captured role+name resolves back to exactly the element it describes", async () => {
+    const { resolveWithFallback } = await import("../../src/runner/locators.js");
+    for (const [role, name, id] of [
+      ["textbox", "Panel options Title field property editor", "panel-title"],
+      ["textbox", "Panel options Description field property editor", "panel-desc"],
+    ] as const) {
+      const loc = await resolveWithFallback(page, [{ strategy: "role_name", role, name }]);
+      expect(await loc.getAttribute("id")).toBe(id);
+    }
+    const spin = await resolveWithFallback(page, [{ strategy: "role_name", role: "spinbutton", name: "Series count" }]);
+    await spin.fill("5");
+    expect(await spin.inputValue()).toBe("5");
+  });
+});
