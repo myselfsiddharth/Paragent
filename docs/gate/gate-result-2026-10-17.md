@@ -134,9 +134,40 @@ post-conditions alone. #212 is a small capture fix. #213 (insert-capable repair 
 out-of-scope) is a founder decision. #209 / #210 are about cross-agent correctness and do not
 move this number.
 
+## Re-run after ADR-0022 (2026-10-18)
+
+The same `-r2` trajectory was recompiled with [ADR-0022](../decisions/ADR-0022-postcondition-anchoring.md)
+(#211). Actions are byte-identical; only post-conditions changed. It was re-run with the identical
+configuration: 8 pins × 6 runs, same model, same baseline file.
+
+| Pin | Run 1 breaks at | Run 2 breaks at |
+| --- | --- | --- |
+| 9.5.21 | — (6/6) | — (6/6) |
+| 10.0.13, 10.4.19, 11.0.0 | step 2 | step 2, unchanged, as predicted |
+| 11.5.2, 12.0.0, 12.2.1 | step 0 | **step 2**: the URL failure is gone |
+| 13.0.3 | step 0 | **step 1**: a new failure, see below |
+
+| Metric | Run 1 | Run 2 |
+| --- | --- | --- |
+| Step-validity, executed steps | 72% (108/150) | 78% (150/192) |
+| Step-validity, all compiled steps | 19% (108/576) | 26% (150/576) |
+| Task success, ≤ 2 repairs | 12.5% (6/48) | 12.5% (6/48) |
+| Repair cost vs fresh, tokens | 0.3% | 0.55% |
+| Repair cost vs fresh, wall-clock | 12.5% | 25.4% |
+| Self-heal | 0 / 42 | 0 / 42 |
+
+Still **no verdict**: 192 step-executions against a floor of 400. Repair costs rose only because more
+runs now reach a repairable step.
+
+**What remains is one failure class: inserted steps (#213).** Step 2 on 10.0.13 through 12.2.1 is the
+data-source modal (attribution B above). On 13.0.3, "Add new panel" became an "Add" menu with a
+"Visualization" item. Repair proposed `button "Add"`, which is the right control and executed
+successfully, but one recorded click is now two, and a single-action repair supplies one. Probed by
+hand on a live 13.0.3. No post-condition failure remains in the matrix.
+
 ## Open questions / what I could not verify
 
 - **Whether 10.4.19 and 11.0.0 fail for exactly the same reason as 10.0.13.** They fail at the same
   step with identical repair costs, but only 10.0.13 and 11.5.2 were probed by hand.
-- **Whether self-heal would be non-zero once #211 lands, or whether #213 is binding.** That is
-  what the re-run is for.
+- ~~Whether self-heal would be non-zero once #211 lands, or whether #213 is binding.~~ **Answered by
+  the re-run: #213 is binding.** After #211, every remaining failure is an inserted step.
