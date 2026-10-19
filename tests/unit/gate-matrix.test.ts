@@ -578,6 +578,7 @@ describe("gate:matrix valued flags (#165)", () => {
     "site-key": { value: "grafana-oss@example", expect: (a) => a.siteKey, want: "grafana-oss@example" },
     "task-key": { value: "open-dashboards-list", expect: (a) => a.taskKey, want: "open-dashboards-list" },
     "repair-model": { value: "claude-opus-5", expect: (a) => a.repairModel, want: "claude-opus-5" },
+    "repair-provider": { value: "voyager", expect: (a) => a.repairProvider, want: "voyager" },
     "cost-fresh": { value: "/tmp/baseline.json", expect: (a) => a.costFresh, want: "/tmp/baseline.json" },
     "cost-program-build": {
       value: "/tmp/build.json",

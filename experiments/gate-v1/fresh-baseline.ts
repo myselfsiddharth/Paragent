@@ -53,6 +53,8 @@ import {
   DEFAULT_FRESH_MODEL,
   DEFAULT_MAX_TURNS,
 } from "../../src/runner/fresh-baseline-anthropic.js";
+import { VoyagerFreshBaselineClient } from "../../src/runner/fresh-baseline-voyager.js";
+import { DEFAULT_VOYAGER_MODEL } from "../../src/runner/repair-voyager.js";
 import { establishSession, LoginFailedError } from "../../src/recorder/preamble.js";
 import { SessionAuthorization } from "../../src/session/consent.js";
 import {
@@ -71,6 +73,7 @@ import { getVersion, listVersions, loadMatrix, type MatrixVersion } from "../../
 import { prepareProvisioningOverlay } from "../../src/testbed/provisioning.js";
 import { readinessPlan, ReadinessTimeoutError, waitUntilReady } from "../../src/testbed/readiness.js";
 import { seedInstance } from "../../src/testbed/seed.js";
+import { loadDotEnv } from "./load-env.js";
 import { loadProgram } from "./run-matrix.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -110,9 +113,14 @@ interface Args {
   runs: number;
   model?: string;
   effort?: string;
+  /** Which provider drives the fresh attempts. Must match the repair client's. */
+  provider: FreshProvider;
   maxTurns?: number;
   port?: number;
 }
+
+export type FreshProvider = "anthropic" | "voyager";
+const FRESH_PROVIDERS: readonly FreshProvider[] = ["anthropic", "voyager"];
 
 function parseArgs(argv: string[]): Args {
   const args: Args = {
@@ -123,9 +131,11 @@ function parseArgs(argv: string[]): Args {
     preamble: true,
     taskGoal: DEFAULT_TASK_GOAL,
     runs: DEFAULT_FRESH_RUNS,
+    provider: "anthropic",
   };
   const valued = new Set([
     "--program", "--version", "--task-goal", "--runs", "--model", "--effort", "--max-turns", "--port",
+    "--provider",
   ]);
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i] ?? "";
@@ -154,6 +164,12 @@ function assignValue(args: Args, key: string, value: string): void {
   else if (key === "task-goal") args.taskGoal = value;
   else if (key === "model") args.model = value;
   else if (key === "effort") args.effort = value;
+  else if (key === "provider") {
+    if (!(FRESH_PROVIDERS as readonly string[]).includes(value)) {
+      throw new Error(`--provider must be one of ${FRESH_PROVIDERS.join(", ")}, got: ${value}`);
+    }
+    args.provider = value as FreshProvider;
+  }
   else if (key === "runs") {
     const n = Number.parseInt(value, 10);
     if (!Number.isFinite(n) || n < 1) throw new Error(`--runs must be >= 1, got: ${value}`);
@@ -185,8 +201,13 @@ function usage(): void {
                      ADR-0006's gate task, stated at intent level only.
   --runs <n>         Fresh attempts (default ${DEFAULT_FRESH_RUNS}). #39 wants at least 3 so a
                      mean has a spread beside it, not just a single sample.
-  --model <id>       Overrides DEFAULT_FRESH_MODEL (${DEFAULT_FRESH_MODEL}).
-  --effort <level>   Overrides DEFAULT_FRESH_EFFORT (${DEFAULT_FRESH_EFFORT}).
+  --provider <p>     anthropic (default) | voyager. voyager is ASU's OpenAI-spec
+                     gateway (needs VOYAGER_API_KEY). MUST match the repair
+                     client's provider and model, or the §9 ratio is about
+                     model choice. --effort does not apply to voyager.
+  --model <id>       Overrides the provider default (anthropic:
+                     ${DEFAULT_FRESH_MODEL}; voyager: ${DEFAULT_VOYAGER_MODEL}).
+  --effort <level>   Overrides DEFAULT_FRESH_EFFORT (${DEFAULT_FRESH_EFFORT}). Anthropic only.
   --max-turns <n>    Overrides DEFAULT_MAX_TURNS (${DEFAULT_MAX_TURNS}) per attempt.
   --port <n>         Host port for the test-bed (default ${DEFAULT_HOST_PORT}).
   --headed           Show the browser (live only).
@@ -194,7 +215,7 @@ function usage(): void {
   --no-preamble      Skip the login preamble.
   --help             Show this help.
 
-A live run needs ANTHROPIC_API_KEY and costs real money — keep --runs small and
+A live run needs ANTHROPIC_API_KEY (or VOYAGER_API_KEY with --provider voyager) and costs real money — keep --runs small and
 deliberate. Writes out/fresh-baseline/metrics.ndjson (through MetricsEmitter,
 its own file — never merged with the matrix's out/metrics.ndjson) and
 out/fresh-baseline/baseline.json (the protocol record + mean/spread that
@@ -211,13 +232,19 @@ interface RunRecord {
   model_id?: string;
   turns: number;
   notes: string;
-  /** True for a fully unmeasured attempt (zeros because it could not run at all). */
+  /**
+   * True for an attempt excluded from the mean: zeros because it could not run
+   * at all, or cut short by a transport failure (a truncated cost).
+   */
   unmeasured: boolean;
+  aborted?: "transport";
 }
 
-function toRunRecord(result: FreshBaselineRunResult, dryRun: boolean): RunRecord {
+export function toRunRecord(result: FreshBaselineRunResult, dryRun: boolean): RunRecord {
   const c = result.cost_fresh;
-  const unmeasured = !dryRun && c.tokens_in === 0 && c.tokens_out === 0 && c.wall_clock_ms === 0;
+  const unmeasured =
+    !dryRun &&
+    ((c.tokens_in === 0 && c.tokens_out === 0 && c.wall_clock_ms === 0) || result.aborted === "transport");
   return {
     run_id: result.run_id,
     task_success: result.task_success,
@@ -228,6 +255,7 @@ function toRunRecord(result: FreshBaselineRunResult, dryRun: boolean): RunRecord
     turns: result.turns,
     notes: dryRun ? DRY_RUN_NOTE : result.notes,
     unmeasured,
+    ...(result.aborted ? { aborted: result.aborted } : {}),
   };
 }
 
@@ -257,6 +285,8 @@ export function buildBaselineSummary(opts: {
   testbedVersion: string;
   taskGoal: string;
   generatedAt?: string;
+  /** Recorded for provenance only; nothing downstream reads it. */
+  provider?: string;
 }): {
   schema_version: "1.0.0";
   kind: "fresh_baseline_run";
@@ -265,6 +295,7 @@ export function buildBaselineSummary(opts: {
   not_a_measurement?: string;
   usable: boolean;
   model_id: string | null;
+  provider?: string;
   effort: string;
   testbed_version: string;
   site_key: string;
@@ -321,6 +352,7 @@ export function buildBaselineSummary(opts: {
     // zeros, which would otherwise look "measured" by the same test below).
     usable: !dryRun && measured.length > 0,
     model_id: modelId,
+    ...(opts.provider !== undefined ? { provider: opts.provider } : {}),
     effort: opts.effort,
     testbed_version: opts.testbedVersion,
     site_key: opts.siteKey,
@@ -366,11 +398,17 @@ async function runLive(
   baseUrlTemplate: string,
   hostPort: number,
 ): Promise<{ records: RunRecord[]; skipReason?: string }> {
-  const client: FreshBaselineClient = new AnthropicFreshBaselineClient({
-    ...(args.model ? { model: args.model } : {}),
-    ...(args.effort ? { effort: args.effort as never } : {}),
-    ...(args.maxTurns ? { maxTurns: args.maxTurns } : {}),
-  });
+  const client: FreshBaselineClient =
+    args.provider === "voyager"
+      ? new VoyagerFreshBaselineClient({
+          ...(args.model ? { model: args.model } : {}),
+          ...(args.maxTurns ? { maxTurns: args.maxTurns } : {}),
+        })
+      : new AnthropicFreshBaselineClient({
+          ...(args.model ? { model: args.model } : {}),
+          ...(args.effort ? { effort: args.effort as never } : {}),
+          ...(args.maxTurns ? { maxTurns: args.maxTurns } : {}),
+        });
   const runner = new FreshBaselineRunner({ client, metrics: emitter });
 
   const baseUrl = baseUrlTemplate.replace("{port}", String(hostPort));
@@ -472,6 +510,7 @@ function lastLines(text: string, n: number): string {
 }
 
 async function main(): Promise<void> {
+  loadDotEnv();
   let args: Args;
   try {
     args = parseArgs(process.argv.slice(2));
@@ -484,6 +523,13 @@ async function main(): Promise<void> {
   if (args.help) {
     usage();
     process.exit(0);
+    return;
+  }
+
+  if (args.provider === "voyager" && args.effort !== undefined) {
+    // Accepting it would let a caller believe effort shaped a run it cannot touch.
+    console.error("gate:baseline: --effort does not apply to --provider voyager (no effort control on the gateway).");
+    process.exit(2);
     return;
   }
 
@@ -541,7 +587,7 @@ async function main(): Promise<void> {
 
   console.log(
     `gate:baseline ${args.dryRun ? "dry-run" : "live"} — ${taskKey}@${matrixVersion.id}, ` +
-      `${args.runs} run(s)${args.dryRun ? "" : ` (model=${args.model ?? DEFAULT_FRESH_MODEL})`}`,
+      `${args.runs} run(s)${args.dryRun ? "" : ` (provider=${args.provider}, model=${args.model ?? (args.provider === "voyager" ? DEFAULT_VOYAGER_MODEL : DEFAULT_FRESH_MODEL)})`}`,
   );
 
   let records: RunRecord[];
@@ -565,7 +611,8 @@ async function main(): Promise<void> {
   const summary = buildBaselineSummary({
     records,
     dryRun: args.dryRun,
-    effort: args.effort ?? DEFAULT_FRESH_EFFORT,
+    effort: args.provider === "voyager" ? "n/a (voyager)" : (args.effort ?? DEFAULT_FRESH_EFFORT),
+    provider: args.provider,
     siteKey,
     taskKey,
     testbedVersion: matrixVersion.id,

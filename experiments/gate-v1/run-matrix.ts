@@ -29,6 +29,8 @@ import { MetricsEmitter, readMetricNdjson } from "../../src/metrics/emitter.js";
 import { ReplayRunner } from "../../src/runner/replay.js";
 import type { RepairModelClient } from "../../src/runner/repair.js";
 import { AnthropicRepairModelClient } from "../../src/runner/repair-anthropic.js";
+import { DEFAULT_VOYAGER_MODEL, VoyagerRepairModelClient } from "../../src/runner/repair-voyager.js";
+import { loadDotEnv } from "./load-env.js";
 import { bundleToProgram, isCompiledBundle, rowsToProgram } from "../../src/runner/program.js";
 import { JsonlCacheStore } from "../../src/cache/store.js";
 import { resolveProgram } from "../../src/cache/resolve.js";
@@ -134,6 +136,13 @@ export interface Args {
    */
   repairModel?: string;
   /**
+   * Which provider backs the real repair client. Unset means `anthropic` when
+   * `--repair-model` is given; passing this alone (`voyager`) also opts in, using
+   * that provider's default model. The stub is still the default when neither
+   * flag is present.
+   */
+  repairProvider?: RepairProvider;
+  /**
    * Path to a measured fresh-baseline summary (#39), written by
    * `npm run gate:baseline` as `out/fresh-baseline/baseline.json`. When set,
    * its `mean_cost_fresh` is broadcast onto every **live** run row's
@@ -177,6 +186,9 @@ export interface Args {
  * unreachable. `tests/unit/gate-matrix.test.ts` walks the table and asserts each
  * key lands in `Args`.
  */
+export type RepairProvider = "anthropic" | "voyager";
+const REPAIR_PROVIDERS: readonly RepairProvider[] = ["anthropic", "voyager"];
+
 const VALUED_FLAGS = {
   versions: (args, value) => {
     args.versions = value;
@@ -210,6 +222,12 @@ const VALUED_FLAGS = {
   },
   "repair-model": (args, value) => {
     args.repairModel = value;
+  },
+  "repair-provider": (args, value) => {
+    if (!(REPAIR_PROVIDERS as readonly string[]).includes(value)) {
+      throw new Error(`--repair-provider must be one of ${REPAIR_PROVIDERS.join(", ")}, got: ${value}`);
+    }
+    args.repairProvider = value as RepairProvider;
   },
   "cost-fresh": (args, value) => {
     args.costFresh = value;
@@ -296,8 +314,15 @@ function usage(): void {
   --pool-only        Resolve from pool-eligible rows only: the cross-tenant
                      case, where a tenant-scoped row must be invisible.
   --repair-model <m> Use a REAL repair model instead of the stub (#27).
-                     Costs money and needs ANTHROPIC_API_KEY. Omitted means the
-                     stub: no network call, no spend, self-heal structurally 0.
+                     Costs money and needs ANTHROPIC_API_KEY (or VOYAGER_API_KEY
+                     with --repair-provider voyager). Omitted means the stub:
+                     no network call, no spend, self-heal structurally 0.
+  --repair-provider <p>
+                     anthropic (default) | voyager. voyager uses ASU's
+                     OpenAI-spec gateway (needs VOYAGER_API_KEY; default model
+                     ${DEFAULT_VOYAGER_MODEL}) and reports MEASURED tokens. Passing
+                     it alone opts in to the real client. The fresh baseline
+                     must be measured with the SAME provider and model.
   --cost-fresh <path> Measured fresh-baseline summary (#39), written by
                      "npm run gate:baseline" as out/fresh-baseline/baseline.json.
                      Its mean_cost_fresh is attached to every LIVE run row's
@@ -759,6 +784,7 @@ function ledgerRow(versionId: string, r: RunResult): Record<string, unknown> {
 }
 
 async function main(): Promise<void> {
+  loadDotEnv();
   let args: Args;
   try {
     args = parseArgs(process.argv.slice(2));
@@ -962,26 +988,52 @@ async function main(): Promise<void> {
   // learn that from a named refusal on line one, not after the first container
   // is up.
   let repairClient: RepairModelClient | undefined;
-  if (args.repairModel !== undefined) {
+  let repairModelId: string | undefined;
+  if (args.repairModel !== undefined || args.repairProvider !== undefined) {
     if (args.dryRun) {
       // A dry run hard-codes every outcome, so no step ever fails and the
       // repair loop is never entered. Silently accepting the flag would let a
       // caller believe they had priced a real repair.
       console.error(
-        "gate:matrix: --repair-model is meaningless under --dry-run — no step " +
-          "fails, so the repair loop never runs and no token is ever spent. " +
-          "Drop one of the two flags.",
+        "gate:matrix: --repair-model / --repair-provider are meaningless under " +
+          "--dry-run — no step fails, so the repair loop never runs and no token " +
+          "is ever spent. Drop one of the two flags.",
       );
       process.exit(2);
       return;
     }
     try {
-      repairClient = new AnthropicRepairModelClient({ model: args.repairModel });
-      console.log(`  repair-model: ${args.repairModel} (REAL client — this run spends tokens)`);
+      const provider: RepairProvider = args.repairProvider ?? "anthropic";
+      if (provider === "voyager") {
+        const client = new VoyagerRepairModelClient({
+          ...(args.repairModel !== undefined ? { model: args.repairModel } : {}),
+        });
+        repairClient = client;
+        repairModelId = client.model;
+      } else {
+        // `--repair-model` is guaranteed here: provider defaults to anthropic
+        // only when it was not given, and the guard above needs one of the two.
+        repairClient = new AnthropicRepairModelClient({ model: args.repairModel! });
+        repairModelId = args.repairModel!;
+      }
+      console.log(
+        `  repair-model: ${repairModelId} via ${provider} (REAL client — this run spends tokens)`,
+      );
     } catch (err) {
       console.error(`gate:matrix: ${errMessage(err)}`);
       process.exit(2);
       return;
+    }
+    // §9 compares cost_repair to cost_fresh. A baseline measured on another
+    // model makes that ratio about model choice, not about repair. Loud rather
+    // than fatal: it is a judgement call for a human (an exploratory run on a
+    // cheaper model is legitimate), but it must never go unseen.
+    if (costFresh?.model_id !== undefined && repairModelId !== undefined && costFresh.model_id !== repairModelId) {
+      console.error(
+        `gate:matrix: WARNING — repair model (${repairModelId}) differs from the ` +
+          `fresh baseline's model (${costFresh.model_id}). The §9 ratio will compare two ` +
+          "different reasoning systems; do not cite it as a gate number.",
+      );
     }
   }
 
