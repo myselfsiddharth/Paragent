@@ -120,6 +120,7 @@ Integrity surface: **[INTEGRITY-AUDIT.md](./INTEGRITY-AUDIT.md)**.
 | Doc | What it is | Status | Last true | Notes |
 | --- | --- | --- | --- | --- |
 | [testbed.md](gate/testbed.md) | Grafana OSS matrix | draft | 2026-07-25 | ADR-0003 |
+| [gate-result-2026-10-17.md](gate/gate-result-2026-10-17.md) | **First live matrix run** — 48 runs, 8 pins, Voyager repair. No verdict (step-execution floor not met: 150 < 400). 9.5.21 6/6; every later pin 0/6, all on post-conditions. Repair vs fresh 0.3% tokens | review | 2026-10-18 | Step-validity 72% executed / 19% compiled; task success 12.5%; self-heal 0/42. Issues #209–#213 |
 | [churn-notes.md](gate/churn-notes.md) | Qualitative DOM churn notes per version transition | draft | 2026-08-21 | Issue #30; predictions vs observed; §9 rates still `no_data` |
 | [recorder.md](gate/recorder.md) | Recorder | draft | 2026-07-24 | — |
 | [compiler.md](gate/compiler.md) | Compiler | draft | 2026-08-12 | Its own `1/12` pre-check number annotated against ADR-0017's `7/12` authoritative recount |
