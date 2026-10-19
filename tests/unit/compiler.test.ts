@@ -376,7 +376,9 @@ describe("click assertion target", () => {
     );
     const assertion = bundle.rows[0]!.assertion;
     expect(assertion.type).toBe("element-visible");
-    expect(assertion.target?.locator?.role).toBe("button");
+    // ADR-0022: the clicked control, by reference to the action's resolved
+    // element — not a copied locator, which was a structural path in practice.
+    expect(assertion.target).toEqual({ locator_ref: "action_target" });
     expect(assertion.expected?.visible).toBe(true);
   });
 
@@ -392,7 +394,7 @@ describe("click assertion target", () => {
 
     expect(assertion.type).toBe("element-visible");
     expect(assertion.expected?.visible).toBe(false);
-    expect(assertion.target?.locator?.role).toBe("button");
+    expect(assertion.target).toEqual({ locator_ref: "action_target" });
     // Disappearance IS the purpose of a dismiss-shaped click, and this fails
     // on a no-op — so it is load-bearing, not merely consistent with success.
     expect(assertion.strength).toBe("strong");

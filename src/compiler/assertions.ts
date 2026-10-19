@@ -254,7 +254,7 @@ export function synthesizeAssertion(
       assertion_id: assertionId,
       type: "element-visible",
       strength: "strong",
-      target: { locator: stripTenantFlagForTarget(primary) },
+      target: { locator_ref: "action_target" },
       expected: { visible: false },
       timeout_ms,
       failure_classification: "assertion_failed",
@@ -317,12 +317,23 @@ export function synthesizeAssertion(
         locator ??
         ({ strategy: "role_name", role: "form" } satisfies CompiledLocator);
 
+      // ADR-0022: when the checked element IS the action's own target, point
+      // at it instead of copying a locator. A copied locator was whichever
+      // chain entry was not tenant-tagged — in practice a structural path — so
+      // the check broke on any layout change and, being frozen under repair,
+      // could never be healed (#211: 3 of 8 pins failed this way). A reference
+      // follows a repaired action and carries no page text into the row.
+      const target: NonNullable<Assertion["target"]> =
+        primary !== undefined && locator === primary
+          ? { locator_ref: "action_target" }
+          : { locator: stripTenantFlagForTarget(resolved) };
+
       return {
         schema_version: SCHEMA_VERSION,
         assertion_id: assertionId,
         type: "element-visible",
         strength,
-        target: { locator: stripTenantFlagForTarget(resolved) },
+        target,
         expected: { visible: true },
         timeout_ms,
         failure_classification: "assertion_failed",
@@ -340,7 +351,7 @@ export function synthesizeAssertion(
 
     const expected: NonNullable<Assertion["expected"]> = {
       template: url_template,
-      regex_template: templateToRegex(url_template),
+      regex_template: urlRegexTemplate(url_template, trajectory),
     };
     if (param_types) expected.param_types = param_types;
 
@@ -409,6 +420,116 @@ export function templateToRegex(template: string): string {
     i = j;
   }
   return `^${parts.join("")}$`;
+}
+
+/**
+ * `url-matches` regex for a recorded URL template (ADR-0022, #211).
+ *
+ * The old regex anchored the whole query string, so a page that appended view
+ * state failed a correct navigation: from Grafana 11.5.2 `/dashboard/new` lands
+ * on `?orgId=1&from=now-6h&to=now&timezone=browser`, and step 0 failed on 4 of
+ * 8 pins with repair (correctly) unable to help.
+ *
+ * Simply allowing extra keys would be a real weakening. Step 7 ("Apply, back to
+ * the dashboard") expects `?orgId=1`; a failed Apply leaves you on
+ * `?orgId=1&editPanel=1`, which a subset match would pass. So the recording
+ * decides which keys carry state:
+ *
+ * - every key recorded on this step's URL must be present with its recorded
+ *   value (holes match any value) — as strict as before;
+ * - a key is STATE-BEARING for a path if the recording saw that path both with
+ *   and without it, or with different values (`editPanel` on `/dashboard/new`).
+ *   A state-bearing key absent from this step's URL must be absent at replay;
+ * - any other extra key was never part of what the recording distinguished —
+ *   view state — and is ignored.
+ *
+ * Product-agnostic: no list of Grafana parameter names, only the trajectory.
+ */
+export function urlRegexTemplate(urlTemplate: string, trajectory: Trajectory): string {
+  const [base, query] = splitUrl(urlTemplate);
+  if (query === undefined && !trajectoryHasQueryFor(base, trajectory)) {
+    return `^${regexBody(base, PATH_HOLE)}(?:\\?[^#]*)?(?:#.*)?$`;
+  }
+  const own = parseQuery(query ?? "");
+  const stateKeys = stateBearingKeys(base, trajectory);
+  const required = [...own.entries()].map(
+    ([k, v]) => `(?=\\?(?:[^#]*&)?${escapeRegex(k)}=${regexBody(v, QUERY_HOLE)}(?:[&#]|$))`,
+  );
+  const forbidden = [...stateKeys]
+    .filter((k) => !own.has(k))
+    .sort()
+    .map((k) => `(?!\\?(?:[^#]*&)?${escapeRegex(k)}(?:=|[&#]|$))`);
+  return `^${regexBody(base, PATH_HOLE)}${required.join("")}${forbidden.join("")}(?:\\?[^#]*)?(?:#.*)?$`;
+}
+
+const PATH_HOLE = "[^/?#]+";
+const QUERY_HOLE = "[^&#]+";
+
+function splitUrl(template: string): [string, string | undefined] {
+  const noFragment = template.split("#")[0]!;
+  const q = noFragment.indexOf("?");
+  return q === -1 ? [noFragment, undefined] : [noFragment.slice(0, q), noFragment.slice(q + 1)];
+}
+
+function parseQuery(query: string): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const pair of query.split("&")) {
+    if (!pair) continue;
+    const eq = pair.indexOf("=");
+    out.set(eq === -1 ? pair : pair.slice(0, eq), eq === -1 ? "" : pair.slice(eq + 1));
+  }
+  return out;
+}
+
+/** Every URL the recording observed (pre and post state of every step), split. */
+function recordedUrls(trajectory: Trajectory): Array<[string, Map<string, string>]> {
+  const urls: string[] = [];
+  for (const step of trajectory.steps) {
+    if (step.pre_state?.url_template) urls.push(step.pre_state.url_template);
+    if (step.post_state?.url_template) urls.push(step.post_state.url_template);
+  }
+  return urls.map((u) => {
+    const [b, q] = splitUrl(u);
+    return [b, parseQuery(q ?? "")];
+  });
+}
+
+function trajectoryHasQueryFor(base: string, trajectory: Trajectory): boolean {
+  return recordedUrls(trajectory).some(([b, q]) => b === base && q.size > 0);
+}
+
+function stateBearingKeys(base: string, trajectory: Trajectory): Set<string> {
+  const samePath = recordedUrls(trajectory).filter(([b]) => b === base).map(([, q]) => q);
+  const keys = new Set(samePath.flatMap((q) => [...q.keys()]));
+  const out = new Set<string>();
+  for (const k of keys) {
+    const values = samePath.map((q) => (q.has(k) ? q.get(k) : undefined));
+    if (values.some((v) => v === undefined) || new Set(values).size > 1) out.add(k);
+  }
+  return out;
+}
+
+/** A template fragment as an unanchored regex, holes matching `hole`. */
+function regexBody(template: string, hole: string): string {
+  const parts: string[] = [];
+  let i = 0;
+  while (i < template.length) {
+    if (template[i] === "{") {
+      const end = template.indexOf("}", i);
+      if (end === -1) {
+        parts.push(escapeRegex(template.slice(i)));
+        break;
+      }
+      parts.push(hole);
+      i = end + 1;
+      continue;
+    }
+    let j = i;
+    while (j < template.length && template[j] !== "{") j++;
+    parts.push(escapeRegex(template.slice(i, j)));
+    i = j;
+  }
+  return parts.join("");
 }
 
 function escapeRegex(literal: string): string {

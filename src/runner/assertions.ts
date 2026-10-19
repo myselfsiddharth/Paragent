@@ -4,7 +4,7 @@
  * Playwright: https://playwright.dev/docs/locators — access_date: 2026-07-24
  */
 
-import type { Page } from "playwright";
+import type { Locator, Page } from "playwright";
 import type { StepOutcome } from "../metrics/types.js";
 import { LocatorNotFoundError, resolveLocator } from "./locators.js";
 import { interpolate } from "./templates.js";
@@ -51,16 +51,43 @@ function templateToRegex(template: string): RegExp {
 /** How often `url-matches` re-reads the URL while waiting for it to settle. */
 const URL_POLL_INTERVAL_MS = 100;
 
+export interface EvaluateAssertionOptions {
+  /** The locator the step's action resolved (`ActionResult.target`), for `locator_ref: "action_target"`. */
+  actionTarget?: Locator;
+}
+
 export async function evaluateAssertion(
   page: Page,
   assertion: Assertion,
   params: ParamBindings = {},
+  options: EvaluateAssertionOptions = {},
 ): Promise<AssertionEvalResult> {
   const timeout = assertion.timeout_ms;
 
   try {
     switch (assertion.type) {
       case "element-visible": {
+        // ADR-0022: the post-condition is about the element the action acted
+        // on, so evaluate exactly that locator — the strategy that matched,
+        // re-queried. "Gone" then means that element no longer matches, never
+        // that some other element further down the fallback chain is hidden.
+        if (assertion.target?.locator_ref === "action_target") {
+          const target = options.actionTarget;
+          if (!target) {
+            return {
+              outcome: "ASSERTION_FAILED",
+              message: "element-visible targets the action's element, but the action resolved no locator",
+            };
+          }
+          const wantVisible = assertion.expected?.visible ?? true;
+          await target.first().waitFor({ state: wantVisible ? "visible" : "hidden", timeout });
+          const visible = await target.first().isVisible();
+          if (visible === wantVisible) return { outcome: "PASS" };
+          return {
+            outcome: classificationToOutcome(assertion),
+            message: `visibility of the acted-on element expected ${wantVisible}, got ${visible}`,
+          };
+        }
         const locSpec = assertion.target?.locator;
         if (!locSpec) {
           return {

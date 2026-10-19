@@ -1,0 +1,790 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_kind": "compiled_trajectory",
+  "source_trajectory_id": "traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+  "site_key": "grafana-oss@9.5.21",
+  "task_key": "create-stat-dashboard-from-testdata",
+  "compiled_at": "2026-07-25T00:00:00.000Z",
+  "compiler": {
+    "version": "0.1.0-b3",
+    "notes": "One CacheRow per step; locator_fallback_chain in B2 preference order; assertions synthesized from post_state (+ hints). pool_eligible fail-closed.",
+    "input_path": "experiments/gate-v1/trajectories/grafana-create-stat-dashboard-from-testdata-9.5.21-r2.json"
+  },
+  "rows": [
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-0",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 0,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "navigate",
+        "locator_fallback_chain": [],
+        "param_refs": [
+          "host",
+          "port"
+        ],
+        "url_template": "http://{host}:{port}/dashboard/new"
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-0",
+        "type": "url-matches",
+        "strength": "strong",
+        "target": {
+          "url_template": "http://{host}:{port}/dashboard/new?orgId=1"
+        },
+        "expected": {
+          "template": "http://{host}:{port}/dashboard/new?orgId=1",
+          "regex_template": "^http://[^/?#]+:[^/?#]+/dashboard/new(?=\\?(?:[^#]*&)?orgId=1(?:[&#]|$))(?!\\?(?:[^#]*&)?editPanel(?:=|[&#]|$))(?:\\?[^#]*)?(?:#.*)?$",
+          "param_types": {
+            "host": "string",
+            "port": "integer"
+          }
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "URL template changed (or navigate completed); matching post_state.url_template is strong evidence the step reached the intended surface."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": false,
+      "pool_ineligible_reason": "literal_in_assertion",
+      "flow_topology": {
+        "next_action_type": "click",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-1",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 1,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "click",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "button",
+            "name": "Add new panel",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "label",
+            "label": "Add new panel",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > button",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "text",
+            "text": "Add visualization",
+            "tenant_scoped": true
+          }
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-1",
+        "type": "url-matches",
+        "strength": "strong",
+        "target": {
+          "url_template": "http://{host}:{port}/dashboard/new?orgId=1&editPanel=1"
+        },
+        "expected": {
+          "template": "http://{host}:{port}/dashboard/new?orgId=1&editPanel=1",
+          "regex_template": "^http://[^/?#]+:[^/?#]+/dashboard/new(?=\\?(?:[^#]*&)?orgId=1(?:[&#]|$))(?=\\?(?:[^#]*&)?editPanel=1(?:[&#]|$))(?:\\?[^#]*)?(?:#.*)?$",
+          "param_types": {
+            "host": "string",
+            "port": "integer"
+          }
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "URL template changed (or navigate completed); matching post_state.url_template is strong evidence the step reached the intended surface."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": false,
+      "pool_ineligible_reason": "literal_in_assertion",
+      "flow_topology": {
+        "prev_action_type": "navigate",
+        "next_action_type": "click",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-2",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 2,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "click",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "button",
+            "name": "toggle-viz-picker",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "label",
+            "label": "toggle-viz-picker",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "main > div:nth-of-type(2) > div:nth-of-type(4) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > button:nth-of-type(1)",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "text",
+            "text": "Time series",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "css_vocab",
+            "css": "[aria-label=\"Panel editor option pane content\"] > div:nth-of-type(1) > div > div > button:nth-of-type(1)",
+            "tenant_scoped": true
+          }
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-2",
+        "type": "element-visible",
+        "strength": "weak",
+        "target": {
+          "locator_ref": "action_target"
+        },
+        "expected": {
+          "visible": true
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "Element visibility from hint/post-state; labelled weak unless stronger signals apply."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": true,
+      "pool_ineligible_reason": null,
+      "flow_topology": {
+        "prev_action_type": "click",
+        "next_action_type": "click",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-3",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 3,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "click",
+        "locator_fallback_chain": [
+          {
+            "strategy": "label",
+            "label": "Plugin visualization item Stat",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > div:nth-of-type(3)",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "text",
+            "text": "StatBig stat values & sparklines",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "css_vocab",
+            "css": "[aria-label=\"Panel editor option pane content\"] > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > div:nth-of-type(3)",
+            "tenant_scoped": true
+          }
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-3",
+        "type": "element-visible",
+        "strength": "strong",
+        "target": {
+          "locator_ref": "action_target"
+        },
+        "expected": {
+          "visible": false
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "Recorder observed the acted-on control was no longer visible after the action (ADR-0007 post_action_target_visible=false). Asserts only that: the control is gone. Proves the step was not a no-op; proves nothing about downstream state."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": true,
+      "pool_ineligible_reason": null,
+      "flow_topology": {
+        "prev_action_type": "click",
+        "next_action_type": "fill",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-4",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 4,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "fill",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "textbox",
+            "name": "Alias",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "label",
+            "label": "Alias",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "div > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > input",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "placeholder",
+            "name": "optional",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "css_vocab",
+            "css": "[aria-label=\"Test Data Query scenario select container\"] > div:nth-of-type(2) > div > div > div > input",
+            "tenant_scoped": true
+          }
+        ],
+        "param_refs": [
+          "series_alias"
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-4",
+        "type": "element-visible",
+        "strength": "weak",
+        "target": {
+          "locator_ref": "action_target"
+        },
+        "expected": {
+          "visible": true
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "Fill/select cannot assert the typed value (values are param slots, never stored). Visibility of the target control is only weakly consistent with a successful fill."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": true,
+      "pool_ineligible_reason": null,
+      "flow_topology": {
+        "prev_action_type": "click",
+        "next_action_type": "fill",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-5",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 5,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "fill",
+        "locator_fallback_chain": [
+          {
+            "strategy": "label",
+            "label": "Series count",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "div > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > input",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "placeholder",
+            "name": "1",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "css_vocab",
+            "css": "[aria-label=\"TestData series count\"] > div > div > div > input",
+            "tenant_scoped": true
+          }
+        ],
+        "param_refs": [
+          "series_count"
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-5",
+        "type": "element-visible",
+        "strength": "weak",
+        "target": {
+          "locator_ref": "action_target"
+        },
+        "expected": {
+          "visible": true
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "Fill/select cannot assert the typed value (values are param slots, never stored). Visibility of the target control is only weakly consistent with a successful fill."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": true,
+      "pool_ineligible_reason": null,
+      "flow_topology": {
+        "prev_action_type": "fill",
+        "next_action_type": "fill",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-6",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 6,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "fill",
+        "locator_fallback_chain": [
+          {
+            "strategy": "structural",
+            "structural_path": "div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > input",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "css_vocab",
+            "css": "[aria-label=\"Panel options Title field property editor\"] > div:nth-of-type(2) > div > div > input",
+            "tenant_scoped": true
+          }
+        ],
+        "param_refs": [
+          "panel_title"
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-6",
+        "type": "element-visible",
+        "strength": "weak",
+        "target": {
+          "locator_ref": "action_target"
+        },
+        "expected": {
+          "visible": true
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "Fill/select cannot assert the typed value (values are param slots, never stored). Visibility of the target control is only weakly consistent with a successful fill."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": true,
+      "pool_ineligible_reason": null,
+      "flow_topology": {
+        "prev_action_type": "fill",
+        "next_action_type": "click",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-7",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 7,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "click",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "button",
+            "name": "Apply",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "testid",
+            "testid": "data-testid Apply changes and go back to dashboard",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "body > div:nth-of-type(1) > div:nth-of-type(1) > main > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > button",
+            "tenant_scoped": false
+          }
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-7",
+        "type": "url-matches",
+        "strength": "strong",
+        "target": {
+          "url_template": "http://{host}:{port}/dashboard/new?orgId=1"
+        },
+        "expected": {
+          "template": "http://{host}:{port}/dashboard/new?orgId=1",
+          "regex_template": "^http://[^/?#]+:[^/?#]+/dashboard/new(?=\\?(?:[^#]*&)?orgId=1(?:[&#]|$))(?!\\?(?:[^#]*&)?editPanel(?:=|[&#]|$))(?:\\?[^#]*)?(?:#.*)?$",
+          "param_types": {
+            "host": "string",
+            "port": "integer"
+          }
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "URL template changed (or navigate completed); matching post_state.url_template is strong evidence the step reached the intended surface."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": false,
+      "pool_ineligible_reason": "literal_in_assertion",
+      "flow_topology": {
+        "prev_action_type": "fill",
+        "next_action_type": "click",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-8",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 8,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "click",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "button",
+            "name": "Save dashboard",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "label",
+            "label": "Save dashboard",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "body > div:nth-of-type(1) > div:nth-of-type(1) > main > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > button",
+            "tenant_scoped": false
+          }
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-8",
+        "type": "element-visible",
+        "strength": "weak",
+        "target": {
+          "locator_ref": "action_target"
+        },
+        "expected": {
+          "visible": true
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "Element visibility from hint/post-state; labelled weak unless stronger signals apply."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": true,
+      "pool_ineligible_reason": null,
+      "flow_topology": {
+        "prev_action_type": "click",
+        "next_action_type": "fill",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-9",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 9,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "fill",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "textbox",
+            "name": "Save dashboard title field",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "label",
+            "label": "Save dashboard title field",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > div:nth-of-type(1) > div:nth-of-type(2) > div > div > input",
+            "tenant_scoped": false
+          }
+        ],
+        "param_refs": [
+          "dashboard_title"
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-9",
+        "type": "element-visible",
+        "strength": "weak",
+        "target": {
+          "locator_ref": "action_target"
+        },
+        "expected": {
+          "visible": true
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "Fill/select cannot assert the typed value (values are param slots, never stored). Visibility of the target control is only weakly consistent with a successful fill."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": true,
+      "pool_ineligible_reason": null,
+      "flow_topology": {
+        "prev_action_type": "click",
+        "next_action_type": "click",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-10",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 10,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "click",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "button",
+            "name": "Save dashboard button",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "label",
+            "label": "Save dashboard button",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "body > div:nth-of-type(3) > div:nth-of-type(3) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > div:nth-of-type(3) > div:nth-of-type(2) > button",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "text",
+            "text": "Save",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "css_vocab",
+            "css": "[aria-label=\"Drawer title Save dashboard\"] > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > div:nth-of-type(3) > div:nth-of-type(2) > button",
+            "tenant_scoped": true
+          }
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-10",
+        "type": "url-matches",
+        "strength": "strong",
+        "target": {
+          "url_template": "http://{host}:{port}/d/{dashboard_uid}/{dashboard_slug}?orgId=1"
+        },
+        "expected": {
+          "template": "http://{host}:{port}/d/{dashboard_uid}/{dashboard_slug}?orgId=1",
+          "regex_template": "^http://[^/?#]+:[^/?#]+/d/[^/?#]+/[^/?#]+(?=\\?(?:[^#]*&)?orgId=1(?:[&#]|$))(?:\\?[^#]*)?(?:#.*)?$",
+          "param_types": {
+            "host": "string",
+            "port": "integer",
+            "dashboard_uid": "string",
+            "dashboard_slug": "string"
+          }
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "URL template changed (or navigate completed); matching post_state.url_template is strong evidence the step reached the intended surface."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": false,
+      "pool_ineligible_reason": "literal_in_assertion",
+      "flow_topology": {
+        "prev_action_type": "fill",
+        "next_action_type": "click",
+        "landmark": "main"
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "row_id": "cache-grafana-oss@9.5.21-create-stat-dashboard-from-testdata-11",
+      "site_key": "grafana-oss@9.5.21",
+      "task_key": "create-stat-dashboard-from-testdata",
+      "step_index": 11,
+      "program": {
+        "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+        "steps_total": 12,
+        "compiled_at": "2026-07-25T00:00:00.000Z"
+      },
+      "compiled_action": {
+        "type": "click",
+        "locator_fallback_chain": [
+          {
+            "strategy": "role_name",
+            "role": "link",
+            "name": "Dashboards",
+            "tenant_scoped": true
+          },
+          {
+            "strategy": "testid",
+            "testid": "data-testid Dashboards breadcrumb",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "structural",
+            "structural_path": "body > div:nth-of-type(1) > div:nth-of-type(1) > main > div:nth-of-type(1) > div:nth-of-type(2) > nav > ol > li:nth-of-type(2) > a",
+            "tenant_scoped": false
+          },
+          {
+            "strategy": "css_vocab",
+            "css": "[aria-label=\"Breadcrumbs\"] > ol > li:nth-of-type(2) > a",
+            "tenant_scoped": true
+          }
+        ]
+      },
+      "assertion": {
+        "schema_version": "1.0.0",
+        "assertion_id": "assert-create-stat-dashboard-from-testdata-step-11",
+        "type": "url-matches",
+        "strength": "strong",
+        "target": {
+          "url_template": "http://{host}:{port}/dashboards"
+        },
+        "expected": {
+          "template": "http://{host}:{port}/dashboards",
+          "regex_template": "^http://[^/?#]+:[^/?#]+/dashboards(?:\\?[^#]*)?(?:#.*)?$",
+          "param_types": {
+            "host": "string",
+            "port": "integer"
+          }
+        },
+        "timeout_ms": 5000,
+        "failure_classification": "assertion_failed",
+        "notes": "URL template changed (or navigate completed); matching post_state.url_template is strong evidence the step reached the intended surface."
+      },
+      "confidence": 0,
+      "success_count": 0,
+      "failure_count": 0,
+      "last_verified_at": "2026-07-25T00:00:00.000Z",
+      "pool_eligible": false,
+      "pool_ineligible_reason": "literal_in_assertion",
+      "flow_topology": {
+        "prev_action_type": "click",
+        "landmark": "main"
+      }
+    }
+  ]
+}

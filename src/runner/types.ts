@@ -91,6 +91,8 @@ export interface AssertionTarget {
   locator?: LocatorSpec;
   url_template?: string;
   count_scope?: string;
+  /** ADR-0022: "the element this step's action resolved" — instead of a copied locator. */
+  locator_ref?: "action_target";
 }
 
 export interface AssertionExpected {
