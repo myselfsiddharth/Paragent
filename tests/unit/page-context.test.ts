@@ -18,6 +18,7 @@ import type { Browser, Page } from "playwright";
 import { launchTestBrowser } from "../helpers/browser.js";
 import { capturePageState } from "../../src/runner/page-state.js";
 import {
+  CONTEXT_ATTRIBUTE_ALLOWLIST,
   CONTEXT_LEVELS,
   DEFAULT_CONTEXT_LEVEL,
   contextExpression,
@@ -160,6 +161,17 @@ describe("contextExpression", () => {
     // #74's invariant, in the new capture site.
     for (const level of CONTEXT_LEVELS) {
       expect(contextExpression(level)).toContain("paragentIsVisible");
+    }
+  });
+
+  it("reads only allowlisted attributes", () => {
+    // CONTEXT_ATTRIBUTE_ALLOWLIST used to be documentation only. #212 added an
+    // attribute to it, and this test is what makes the list hold.
+    for (const level of CONTEXT_LEVELS) {
+      const read = [...contextExpression(level).matchAll(/(?:get|has)Attribute\("([^"]+)"\)/g)]
+        .map((m) => m[1]);
+      expect(read.length).toBeGreaterThan(0);
+      for (const attr of read) expect(CONTEXT_ATTRIBUTE_ALLOWLIST).toContain(attr);
     }
   });
 
@@ -306,5 +318,97 @@ describe("truthful roles and container-named controls (ADR-0021)", () => {
     const spin = await resolveWithFallback(page, [{ strategy: "role_name", role: "spinbutton", name: "Series count" }]);
     await spin.fill("5");
     expect(await spin.inputValue()).toBe("5");
+  });
+});
+
+/**
+ * #212: on Grafana 10.0.13 the "Select data source" modal is rendered at the end
+ * of the DOM. The editor's option panes filled the 120-element cap in document
+ * order, so none of the modal's controls reached the repair model.
+ */
+describe("an open dialog is captured first (#212)", () => {
+  let browser: Browser;
+  let page: Page;
+
+  // More background controls than the cap, so a document-order capture never
+  // reaches the dialog. That was the live failure.
+  const background = Array.from(
+    { length: 150 },
+    (_, i) => `<button aria-label="Option pane ${i}">x</button>`,
+  ).join("");
+  const dialogBody = `
+    <h2>Select data source</h2>
+    <p>${BODY_TEXT}</p>
+    <input aria-label="Search data sources" value="${TYPED_VALUE}">
+    <button aria-label="Data source TestData">TestData</button>
+    <button aria-label="Close">x</button>`;
+
+  const html = (dialogAttrs: string) => `<!doctype html><html><body>
+    <main><button aria-label="Close">bg close</button>${background}</main>
+    <div ${dialogAttrs}>${dialogBody}</div>
+  </body></html>`;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("a modal's controls come first, flagged, and the inert background is dropped", async () => {
+    await page.setContent(html(`role="dialog" aria-modal="true" aria-label="Select data source"`));
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements).toEqual([
+      { role: "textbox", name: "Search data sources", in_dialog: true },
+      { role: "button", name: "Data source TestData", in_dialog: true },
+      { role: "button", name: "Close", in_dialog: true },
+    ]);
+  });
+
+  it("a non-modal dialog's controls come first and the background is demoted, not dropped", async () => {
+    await page.setContent(html(`role="dialog" aria-label="Select data source"`));
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements.slice(0, 3).map((e) => e.name)).toEqual([
+      "Search data sources",
+      "Data source TestData",
+      "Close",
+    ]);
+    expect(elements.slice(0, 3).every((e) => e.in_dialog === true)).toBe(true);
+    // The background's own "Close" is deduplicated against the dialog's, and
+    // what remains of the background carries no flag.
+    expect(elements[3]).toEqual({ role: "button", name: "Option pane 0" });
+    expect(elements).toHaveLength(120);
+  });
+
+  it("a <dialog> opened with showModal() is treated as modal without aria-modal", async () => {
+    await page.setContent(`<!doctype html><html><body>
+      <main>${background}</main>
+      <dialog id="d">${dialogBody}</dialog>
+      <script>document.getElementById("d").showModal()</script>
+    </body></html>`);
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements.map((e) => e.name)).toEqual([
+      "Search data sources",
+      "Data source TestData",
+      "Close",
+    ]);
+  });
+
+  it("a hidden dialog changes nothing", async () => {
+    await page.setContent(html(`role="dialog" aria-modal="true" style="display:none"`));
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements[0]).toEqual({ role: "button", name: "Close" });
+    expect(elements.some((e) => e.in_dialog)).toBe(false);
+  });
+
+  it("still never carries a value or prose from the dialog", async () => {
+    await page.setContent(html(`role="dialog" aria-modal="true"`));
+    for (const level of CONTEXT_LEVELS) {
+      const serialized = JSON.stringify(await capturePageState(page, level));
+      expect(serialized).not.toContain(TYPED_VALUE);
+      expect(serialized).not.toContain(BODY_TEXT);
+    }
   });
 });

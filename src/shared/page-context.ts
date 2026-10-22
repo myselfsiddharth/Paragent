@@ -77,6 +77,12 @@ export interface ContextElement {
   name: string;
   /** Present only when the element is disabled/checked/expanded. */
   state?: string[];
+  /**
+   * Present only when the element is inside the open dialog in front of the
+   * page (#212). A dialog's elements are listed before everything else, so the
+   * 120-element cap can no longer fill up with the inert background first.
+   */
+  in_dialog?: true;
 }
 
 /**
@@ -95,6 +101,8 @@ export const CONTEXT_ATTRIBUTE_ALLOWLIST: readonly string[] = [
   "aria-disabled",
   "aria-checked",
   "aria-expanded",
+  // #212: whether the open dialog makes everything behind it inert.
+  "aria-modal",
   "disabled",
   "type",
 ];
@@ -164,6 +172,17 @@ export function contextExpression(level: ContextLevel): string {
   // never matches a name.
   const labelledClickableSelector = "[aria-label]";
 
+  // #212: an open dialog. Grafana 10.0.13's "Select data source" modal is
+  // rendered at the end of the DOM, and in document order the editor's option
+  // panes filled the 120-element cap first. The repair model was shown the
+  // background and none of the dialog's 10 controls. So the frontmost visible
+  // dialog's elements go first, each flagged `in_dialog`. When it is declared
+  // modal (aria-modal, or a <dialog> opened with showModal()), the elements
+  // behind it are inert and are dropped. A non-modal dialog only demotes them.
+  // The one new attribute read is aria-modal, which is structural and on the
+  // allowlist. A <dialog>'s `open` is only matched by the selector.
+  const dialogSelector = "[role=dialog],[role=alertdialog],[aria-modal=true],dialog[open]";
+
   return `(() => {
     if (${level === "landmarks" ? "true" : "false"}) return [];
     ${VISIBILITY_PREDICATE_JS}
@@ -175,8 +194,21 @@ export function contextExpression(level: ContextLevel): string {
       .filter((el) => !primarySet.has(el) && !el.hasAttribute("role")
         && getComputedStyle(el).cursor === "pointer");
     const extraSet = new Set(extra);
-    const candidates = primary.concat(extra)
+    let candidates = primary.concat(extra)
       .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
+    // Last in document order is the frontmost: portals append to the body, and
+    // a dialog nested in another comes after its parent.
+    const dialogs = Array.from(document.querySelectorAll(${JSON.stringify(dialogSelector)}))
+      .filter((el) => paragentIsVisible(el));
+    const dialog = dialogs.length > 0 ? dialogs[dialogs.length - 1] : null;
+    if (dialog) {
+      let modal = dialog.getAttribute("aria-modal") === "true";
+      if (!modal) {
+        try { modal = dialog.matches(":modal"); } catch (e) { modal = false; }
+      }
+      const inside = candidates.filter((el) => dialog.contains(el));
+      candidates = modal ? inside : inside.concat(candidates.filter((el) => !dialog.contains(el)));
+    }
     for (const el of candidates) {
       if (!paragentIsVisible(el)) continue;
 
@@ -261,6 +293,7 @@ export function contextExpression(level: ContextLevel): string {
 
       const entry = { role: role, name: name };
       if (state.length > 0) entry.state = state;
+      if (dialog && dialog.contains(el)) entry.in_dialog = true;
       out.push(entry);
       if (out.length >= 120) break;
     }
