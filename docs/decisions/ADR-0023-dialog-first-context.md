@@ -41,12 +41,35 @@ When a visible dialog is open (`[role=dialog]`, `[role=alertdialog]`, `[aria-mod
   is what makes the fix work there.
 - The repair and fresh-baseline system prompts each gain one sentence that explains the flag.
 
-Same allowlist and the same no-values rule apply. The one attribute newly read is `aria-modal`. It is
-structural ARIA, and it is added to `CONTEXT_ATTRIBUTE_ALLOWLIST`. That list was documentation
-only; a unit test now asserts that every attribute the capture reads is on it.
+Same allowlist and the same no-values rule apply. The attributes newly read are `aria-modal` and
+`aria-hidden` (below). Both are structural ARIA and are added to `CONTEXT_ATTRIBUTE_ALLOWLIST`.
+That list was documentation only; a unit test now asserts that every attribute the capture reads
+is on it.
 
 Measured live on 10.0.13 at step 2, with the new capture: 120 elements, the first 8 flagged
-`in_dialog`, including the default TestData source and "-- Mixed --".
+`in_dialog`, including the TestData source and "-- Mixed --".
+
+### Content-derived names follow the accessible-name rules
+
+Found by the first live probe of sequence repair on 10.0.13 (#213). The data-source card was
+captured as `"Paragent TestData defaultTestData"` (raw `textContent`). Its accessible name is
+`"Paragent TestData Tags TestData"`: the tag list's `aria-label` stands in for its content, and
+block-level children are space-separated. The model proposed the name it was shown, and no locator
+matched it.
+
+A name read from content now follows the rules Playwright's role engine applies:
+
+- A labelled child contributes its `aria-label`.
+- An `aria-hidden` or undisplayed child contributes nothing.
+- A child that is not `display: inline` is space-separated.
+
+The same rule applies to `aria-labelledby` and `<label>` text. No new source of text is read. It is
+the same text nodes and `aria-label`, assembled correctly. `aria-hidden` joins the allowlist. A test
+asserts that every captured name in the fixture resolves back to exactly its element.
+
+The cost is that content an `aria-label` replaces is no longer shown. The card's "default" tag is
+gone, because the accessible name says "Tags". The model can only target what a locator can match,
+so it is shown only that.
 
 ## Alternatives rejected
 

@@ -412,3 +412,55 @@ describe("an open dialog is captured first (#212)", () => {
     }
   });
 });
+
+/**
+ * Found by the first live sequence-repair probe on Grafana 10.0.13 (#213): the
+ * data-source card was captured as "Paragent TestData defaultTestData" (raw
+ * textContent), its accessible name is "Paragent TestData Tags TestData", and
+ * the model's correct proposal matched nothing. A name the model is shown must
+ * be a name a locator can match.
+ */
+describe("content-derived names are accessible names (#212)", () => {
+  let browser: Browser;
+  let page: Page;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+    await page.setContent(`<!doctype html><html><body><main>
+      <h2><button id="card"><div>Paragent TestData</div><ul aria-label="Tags"><li>default</li></ul><div>TestData</div></button></h2>
+      <button id="inline">Save <b>dash</b>board</button>
+      <button id="hidden">Close<span aria-hidden="true">×</span><span style="display:none">${BODY_TEXT}</span></button>
+    </main></body></html>`);
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("uses a child's aria-label for its content and spaces block children", async () => {
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements).toContainEqual({ role: "button", name: "Paragent TestData Tags TestData" });
+  });
+
+  it("does not space inline children, and skips aria-hidden and undisplayed ones", async () => {
+    const names = ((await capturePageState(page, "interactive")).elements ?? []).map((e) => e.name);
+    expect(names).toContain("Save dashboard");
+    expect(names).toContain("Close");
+    expect(JSON.stringify(names)).not.toContain(BODY_TEXT);
+  });
+
+  it("every captured name resolves back to exactly its element", async () => {
+    const { resolveWithFallback } = await import("../../src/runner/locators.js");
+    const { elements = [] } = await capturePageState(page, "interactive");
+    for (const [name, id] of [
+      ["Paragent TestData Tags TestData", "card"],
+      ["Save dashboard", "inline"],
+      ["Close", "hidden"],
+    ] as const) {
+      expect(elements.map((e) => e.name)).toContain(name);
+      const loc = await resolveWithFallback(page, [{ strategy: "role_name", role: "button", name }]);
+      expect(await loc.getAttribute("id")).toBe(id);
+    }
+  });
+});

@@ -103,6 +103,9 @@ export const CONTEXT_ATTRIBUTE_ALLOWLIST: readonly string[] = [
   "aria-expanded",
   // #212: whether the open dialog makes everything behind it inert.
   "aria-modal",
+  // #212: a content-derived name skips aria-hidden children, as the
+  // accessible name does.
+  "aria-hidden",
   "disabled",
   "type",
 ];
@@ -183,9 +186,42 @@ export function contextExpression(level: ContextLevel): string {
   // allowlist. A <dialog>'s `open` is only matched by the selector.
   const dialogSelector = "[role=dialog],[role=alertdialog],[aria-modal=true],dialog[open]";
 
+  // A name read from content must be the name a locator will match. Raw
+  // textContent was not: on Grafana 10.0.13 the data-source card reads
+  // "Paragent TestData defaultTestData", while its accessible name is
+  // "Paragent TestData Tags TestData", because the tag list's aria-label stands
+  // in for its content and block-level children are separated by spaces. The
+  // model proposed the name it was shown and no locator matched it. So text
+  // names follow the accessible-name rules Playwright's role engine applies to
+  // content: a labelled child contributes its aria-label, an aria-hidden or
+  // undisplayed child contributes nothing, and a child that is not
+  // display:inline is space-separated. No new source of text: it is the same
+  // text nodes and the same allowlisted aria-label, now assembled correctly.
+  const textNameJs = `const paragentTextName = (root) => {
+      const parts = [];
+      const walk = (node) => {
+        for (const child of node.childNodes) {
+          if (child.nodeType === 3) { parts.push(child.textContent || ""); continue; }
+          if (child.nodeType !== 1) continue;
+          if (child.getAttribute("aria-hidden") === "true") continue;
+          const cs = getComputedStyle(child);
+          if (cs.display === "none" || cs.visibility === "hidden") continue;
+          const spaced = cs.display !== "inline" || child.tagName === "BR";
+          if (spaced) parts.push(" ");
+          const label = child.getAttribute("aria-label");
+          if (label) parts.push(label);
+          else walk(child);
+          if (spaced) parts.push(" ");
+        }
+      };
+      walk(root);
+      return parts.join("").replace(/\\s+/g, " ").trim();
+    };`;
+
   return `(() => {
     if (${level === "landmarks" ? "true" : "false"}) return [];
     ${VISIBILITY_PREDICATE_JS}
+    ${textNameJs}
     const out = [];
     const seen = new Set();
     const primary = Array.from(document.querySelectorAll(${JSON.stringify(selector)}));
@@ -249,21 +285,21 @@ export function contextExpression(level: ContextLevel): string {
         if (ref) {
           const labelled = ref.split(/\\s+/).map((id) => {
             const n = document.getElementById(id);
-            return n ? (n.textContent || "").trim() : "";
+            return n ? paragentTextName(n) : "";
           }).filter(Boolean).join(" ");
           if (labelled) name = labelled;
         }
       }
       if (!name && el.id) {
         const lab = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
-        if (lab) name = (lab.textContent || "").trim();
+        if (lab) name = paragentTextName(lab);
       }
       if (!name) {
         const closestLabel = el.closest("label");
-        if (closestLabel) name = (closestLabel.textContent || "").trim();
+        if (closestLabel) name = paragentTextName(closestLabel);
       }
       if (!name && (role === "button" || role === "link" || role === "heading" || role === "tab" || role === "menuitem" || role === "option")) {
-        name = (el.textContent || "").trim();
+        name = paragentTextName(el);
       }
       // ADR-0021: a control with no accessible name of its own takes the
       // aria-label of its nearest labelled container (Grafana's panel-title
@@ -278,7 +314,7 @@ export function contextExpression(level: ContextLevel): string {
           if (label) { name = label; break; }
         }
       }
-      name = name.replace(/\\s+/g, " ").slice(0, 120);
+      name = name.replace(/\\s+/g, " ").trim().slice(0, 120);
 
       const state = [];
       if (el.hasAttribute("disabled") || el.getAttribute("aria-disabled") === "true") state.push("disabled");
