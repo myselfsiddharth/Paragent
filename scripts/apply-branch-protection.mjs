@@ -8,13 +8,19 @@
  * exposes the protection API on public repos or paid plans, so on a private repo
  * under a free org this exits with an explanation rather than a stack trace.
  *
- * Rules mirror docs ORG_SETUP.md: one approving review, dismiss stale reviews,
- * code-owner review, linear history, no force-push or deletion, conversations
- * resolved, and CI green. enforce_admins stays off while the team is small.
+ * Rules: linear history, no force-push or deletion, conversations resolved, and
+ * CI green. enforce_admins stays off so the sole maintainer can break glass.
+ *
+ * Deliberately no pull-request review requirement. Paragent is a personal
+ * project with one collaborator, and GitHub does not let anyone approve their
+ * own PR — so any non-zero approval count is unsatisfiable here, not strict. It
+ * blocked every PR rather than gating it. CI is the real gate: the three
+ * required checks below plus `strict` (branch up to date) still hold, and they
+ * are what actually ran on the PRs this rule used to stall.
  */
 import { execFileSync } from "node:child_process";
 
-const DEFAULT_REPO = "DevToolie/Paragent";
+const DEFAULT_REPO = "myselfsiddharth/Paragent";
 const BRANCH = "main";
 
 /**
@@ -35,12 +41,7 @@ const protection = {
     contexts: REQUIRED_CHECKS,
   },
   enforce_admins: false,
-  required_pull_request_reviews: {
-    dismiss_stale_reviews: true,
-    require_code_owner_reviews: true,
-    required_approving_review_count: 1,
-    require_last_push_approval: false,
-  },
+  required_pull_request_reviews: null,
   restrictions: null,
   required_linear_history: true,
   allow_force_pushes: false,
@@ -117,10 +118,17 @@ function main() {
   console.log(`protected ${repo}@${BRANCH}:`);
   console.log(`  required checks:      ${applied.required_status_checks.contexts.join(", ")}`);
   console.log(`  strict (up to date):  ${applied.required_status_checks.strict}`);
+  // GitHub omits the key entirely when no review rule is set, so this has to
+  // read as absent rather than as a zero.
+  const reviews = applied.required_pull_request_reviews;
   console.log(
-    `  approvals:            ${applied.required_pull_request_reviews.required_approving_review_count}` +
-      ` (code owners: ${applied.required_pull_request_reviews.require_code_owner_reviews},` +
-      ` dismiss stale: ${applied.required_pull_request_reviews.dismiss_stale_reviews})`,
+    `  approvals:            ${
+      reviews
+        ? `${reviews.required_approving_review_count}` +
+          ` (code owners: ${reviews.require_code_owner_reviews},` +
+          ` dismiss stale: ${reviews.dismiss_stale_reviews})`
+        : "not required (solo project — see the note at the top of this file)"
+    }`,
   );
   console.log(`  linear history:       ${applied.required_linear_history.enabled}`);
   console.log(`  force pushes:         ${applied.allow_force_pushes.enabled}`);
