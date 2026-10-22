@@ -1,2 +1,7 @@
-# Default owners for everything in the repo.
-*       @myselfsiddharth @DevToolie/core
+# Default owner for everything in the repo.
+#
+# Paragent is a personal project: @myselfsiddharth owns all of it. The former
+# @DevToolie/core team was removed when the repo moved to a personal account —
+# personal repos cannot own teams, so GitHub reported it as an unknown owner and
+# the code-owner review requirement became unsatisfiable by anyone.
+*       @myselfsiddharth

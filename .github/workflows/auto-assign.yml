@@ -23,9 +23,11 @@ jobs:
     steps:
       - uses: actions/github-script@v9
         env:
-          # GITHUB_TOKEN cannot read org team membership, so the pool is listed
-          # here. Keep it in sync with the @DevToolie/core team.
-          POOL: myselfsiddharth,OM152002
+          # Everyone who may be assigned work or asked for review. Must contain
+          # only current repo collaborators: requestReviewers rejects the whole
+          # call with a 422 if any login is not one, which is what made this job
+          # fail on every PR after the repo moved off the DevToolie org.
+          POOL: myselfsiddharth
         with:
           script: |
             const pool = process.env.POOL.split(",").map((s) => s.trim()).filter(Boolean);
