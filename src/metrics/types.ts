@@ -67,6 +67,12 @@ export interface StepMetric {
   repair_attempt?: number;
   time_to_repair_ms?: number;
   assertion_strength?: AssertionStrength;
+  /**
+   * Pre-actions the step ran before its own action (ADR-0024, #213). Present
+   * only when at least one ran, so §9 can separate steps that passed by
+   * inserting an action from steps that did not.
+   */
+  pre_action_count?: number;
   recorded_at: string;
 }
 

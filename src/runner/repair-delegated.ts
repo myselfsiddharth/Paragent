@@ -45,7 +45,7 @@
  * `usage` block, which is exactly what a delegated client cannot produce.
  */
 
-import { sanitizeProposedAction, type RepairModelClient } from "./repair.js";
+import { sanitizeProposal, type RepairModelClient } from "./repair.js";
 import { serializeRepairContext, type RepairEgressPayload } from "./repair-egress.js";
 import type { RepairContext, RepairProposal } from "./types.js";
 
@@ -62,6 +62,8 @@ import type { RepairContext, RepairProposal } from "./types.js";
  */
 export interface DelegatedRepairResponse {
   corrected_action?: unknown;
+  /** ADR-0024: up to `MAX_PRE_ACTIONS` actions to run first. Validated like `corrected_action`. */
+  pre_actions?: unknown;
   /** What the host used, if it cares to say. Recorded for reproducibility only. */
   model_id?: string;
   notes?: string;
@@ -146,9 +148,10 @@ export class DelegatedRepairModelClient implements RepairModelClient {
       return this.proposal(null, "host returned a non-object response");
     }
 
-    const { action, rejected } = sanitizeProposedAction(response.corrected_action);
+    const { action, pre_actions, rejected } = sanitizeProposal(response);
     const note = [rejected, response.notes].filter(Boolean).join("; ");
     const proposal = this.proposal(action, note);
+    if (pre_actions.length > 0) proposal.pre_actions = pre_actions;
     if (typeof response.model_id === "string" && response.model_id.length > 0) {
       // Reproducibility only. It never makes the cost measured — see the
       // module note and ADR-0020.

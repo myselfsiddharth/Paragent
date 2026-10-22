@@ -154,3 +154,91 @@ describe("canary: a repaired action goes through the privacy boundary", () => {
     expect(store.allWrites()).toHaveLength(2);
   });
 });
+
+/**
+ * ADR-0024 (#213): a repair may insert actions before the step's own, and each
+ * one is a locator chain a model proposed. They are held to exactly the
+ * boundary `compiled_action` is. The new field is the obvious place for a leak
+ * to ride past a check that only walks `compiled_action`.
+ */
+describe("canary: a repair's pre-actions go through the same boundary (ADR-0024)", () => {
+  const clean = {
+    type: "click" as const,
+    locator_fallback_chain: [{ strategy: "testid" as const, testid: "modal-close", tenant_scoped: false }],
+  };
+
+  it("refuses a repair whose only tainted part is a pre-action", () => {
+    const store = new MemoryCacheStore();
+    store.write(pooledRow());
+    expect(() =>
+      recordStepOutcome(
+        {
+          ...KEY,
+          outcome: "REPAIRED_PASS",
+          repair: {
+            run_id: "run-1",
+            repair_attempt: 1,
+            corrected_action: clean,
+            pre_actions: [taintedRepair().corrected_action],
+          },
+        },
+        { store, now: () => NOW },
+      ),
+    ).toThrow(CacheWriteRejectedError);
+    expect(store.allWrites()).toHaveLength(1);
+    expect(findCanariesIn(JSON.stringify(store.allWrites()))).toEqual([]);
+  });
+
+  it("strips a pre-action's tainted locators and keeps its clean ones", () => {
+    const store = new MemoryCacheStore();
+    store.write(pooledRow());
+    const mixed = {
+      type: "click" as const,
+      locator_fallback_chain: [
+        ...taintedRepair().corrected_action.locator_fallback_chain,
+        { strategy: "testid" as const, testid: "cancel-button", tenant_scoped: false },
+      ],
+    };
+    const result = recordStepOutcome(
+      {
+        ...KEY,
+        outcome: "REPAIRED_PASS",
+        repair: { run_id: "run-1", repair_attempt: 1, corrected_action: clean, pre_actions: [mixed] },
+      },
+      { store, now: () => NOW },
+    );
+    expect(result.row?.pool_eligible).toBe(true);
+    expect(result.row?.pre_actions?.[0]?.locator_fallback_chain).toEqual([
+      { strategy: "testid", testid: "cancel-button", tenant_scoped: false },
+    ]);
+    expect(result.row?.repair_provenance?.pre_action_count).toBe(1);
+    for (const [label, value] of Object.entries(CANARY_TENANT)) {
+      expect(JSON.stringify(store.allWrites()), `leaked ${label}`).not.toContain(value);
+    }
+  });
+
+  it("an empty list clears a row's pre-actions; a report without the field keeps them", () => {
+    const store = new MemoryCacheStore();
+    store.write({ ...pooledRow(), pre_actions: [clean] } as CacheRow);
+    const kept = recordStepOutcome(
+      { ...KEY, outcome: "REPAIRED_PASS", repair: { run_id: "r", repair_attempt: 1, corrected_action: clean } },
+      { store, now: () => NOW },
+    );
+    expect(kept.row?.pre_actions).toHaveLength(1);
+    const cleared = recordStepOutcome(
+      { ...KEY, outcome: "REPAIRED_PASS", repair: { run_id: "r", repair_attempt: 1, corrected_action: clean, pre_actions: [] } },
+      { store, now: () => NOW },
+    );
+    expect(cleared.row?.pre_actions).toBeUndefined();
+    expect(cleared.row?.repair_provenance?.pre_action_count).toBeUndefined();
+  });
+
+  it("an ordinary confidence update carries a row's pre-actions through", () => {
+    // finalize() builds rows field by field; a field it forgets is silently
+    // dropped on every rewrite, which would undo the repair on the next PASS.
+    const store = new MemoryCacheStore();
+    store.write({ ...pooledRow(), pre_actions: [clean] } as CacheRow);
+    const result = recordStepOutcome({ ...KEY, outcome: "PASS" }, { store, now: () => NOW });
+    expect(result.row?.pre_actions).toEqual([clean]);
+  });
+});

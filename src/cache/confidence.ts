@@ -178,6 +178,8 @@ export interface OutcomeContext {
     run_id: string;
     repair_attempt: number;
     corrected_action: CacheRow["compiled_action"];
+    /** The step's pre-actions after the repair (ADR-0024). Empty clears them. */
+    pre_actions?: CacheRow["compiled_action"][];
   };
 }
 
@@ -212,6 +214,14 @@ export function applyOutcome(
       last_verified_at: ctx.now,
       invalidated_at: null,
     };
+    // ADR-0024: a repair that reports pre-actions replaces the step's whole
+    // sequence. The recorded ones it kept are already in its list, so an empty
+    // list clears them: that is how a repair drops an action churn took away.
+    // A report without the field predates ADR-0024 and leaves them as they are.
+    if (ctx.repair?.pre_actions !== undefined) {
+      delete repaired.pre_actions;
+      if (ctx.repair.pre_actions.length > 0) repaired.pre_actions = ctx.repair.pre_actions;
+    }
     // The only place provenance is set. `forRewrite` cleared whatever an
     // earlier repair left, so a `repaired` outcome that arrives without repair
     // details carries none rather than inheriting the previous repair's.
@@ -222,6 +232,9 @@ export function applyOutcome(
         repair_attempt: ctx.repair.repair_attempt,
         replaced_action_type: row.compiled_action.type,
       };
+      if (repaired.pre_actions) {
+        repaired.repair_provenance.pre_action_count = repaired.pre_actions.length;
+      }
     }
     return repaired;
   }

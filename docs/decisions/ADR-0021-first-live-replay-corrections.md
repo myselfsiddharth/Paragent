@@ -126,6 +126,13 @@ ADR-0017, `docs/gate/pool-vocabulary.md` and several tests cite measurements on 
 - `repair_context_level` is still `"interactive"`, but what `"interactive"` contains has changed.
   Rows from before and after this ADR are not comparable at the same level name.
 
+## Later amendments
+
+- **[ADR-0023](ADR-0023-dialog-first-context.md) (#212).** The page context captures an open dialog
+  first, so the 120-element cap no longer hides it behind the editor.
+- **[ADR-0024](ADR-0024-sequence-repair.md) (#213).** A repair may insert up to two actions before
+  the step's own, and they persist with it.
+
 ## Open questions / what I could not verify
 
 - **The pointer heuristic.** `cursor: pointer` admits role-less controls that render as clickable.

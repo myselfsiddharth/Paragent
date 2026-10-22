@@ -97,6 +97,14 @@ describe("DelegatedRepairModelClient: the host proposes (#189)", () => {
     expect(proposal.corrected_action).toEqual(GOOD_ACTION);
   });
 
+  it("passes through the host's pre_actions, validated like its action (ADR-0024)", async () => {
+    const ok = await client(() => ({ corrected_action: GOOD_ACTION, pre_actions: [GOOD_ACTION] })).propose(context());
+    expect(ok.pre_actions).toEqual([GOOD_ACTION]);
+    const bad = await client(() => ({ corrected_action: GOOD_ACTION, pre_actions: [{ type: "click" }] })).propose(context());
+    expect(bad.corrected_action).toBeNull();
+    expect(bad.notes).toMatch(/pre_actions\[0\]/);
+  });
+
   it("passes through the host's model_id without making the cost measured", async () => {
     const proposal = await client(async () => ({
       corrected_action: GOOD_ACTION,

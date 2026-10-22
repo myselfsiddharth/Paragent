@@ -64,12 +64,19 @@ export function bundleToProgram(
 ): CompiledProgram {
   const steps: CompiledStep[] = [...bundle.rows]
     .sort((a, b) => a.step_index - b.step_index)
-    .map((row) => ({
-      step_index: row.step_index,
-      row_id: row.row_id,
-      compiled_action: row.compiled_action as CompiledAction,
-      assertion: row.assertion as Assertion,
-    }));
+    .map((row) => {
+      const step: CompiledStep = {
+        step_index: row.step_index,
+        row_id: row.row_id,
+        compiled_action: row.compiled_action as CompiledAction,
+        assertion: row.assertion as Assertion,
+      };
+      // The compiler never writes pre-actions (only a repair does, ADR-0024),
+      // but a bundle exported from a repaired cache may carry them.
+      const pre = (row as { pre_actions?: unknown }).pre_actions;
+      if (Array.isArray(pre) && pre.length > 0) step.pre_actions = pre as CompiledAction[];
+      return step;
+    });
 
   const program: CompiledProgram = {
     schema_version: "1.0.0",
@@ -102,6 +109,7 @@ export interface ResolvedProgramLike {
   rows: ReadonlyArray<{
     step_index: number;
     row_id?: string;
+    pre_actions?: unknown;
     compiled_action: unknown;
     assertion: unknown;
   }>;
@@ -136,6 +144,11 @@ export function rowsToProgram(
         assertion: row.assertion as Assertion,
       };
       if (row.row_id !== undefined) step.row_id = row.row_id;
+      // ADR-0024: a repaired row's pre-actions are part of the step. Dropping
+      // them here would undo the repair on every cache-read replay.
+      if (Array.isArray(row.pre_actions) && row.pre_actions.length > 0) {
+        step.pre_actions = row.pre_actions as CompiledAction[];
+      }
       return step;
     });
 

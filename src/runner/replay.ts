@@ -27,6 +27,7 @@ import {
 import { assertParamsBound } from "./params.js";
 import {
   assertAssertionUnchanged,
+  MAX_PRE_ACTIONS,
   type RepairModelClient,
   StubRepairModelClient,
 } from "./repair.js";
@@ -288,6 +289,7 @@ export class ReplayRunner {
       const first = await this.attemptStep({
         program,
         step,
+        preActions: step.pre_actions ?? [],
         action: step.compiled_action,
         params,
         runId,
@@ -301,6 +303,9 @@ export class ReplayRunner {
       // cache-update observer: a REPAIRED_PASS rewrites the entry, so the sink
       // has to know what it was rewritten *to*.
       let repairedAction: CompiledAction | undefined;
+      // ADR-0024: the step's pre-action list after a repair — what ran
+      // before the failure, then the repair's own. Persisted with the action.
+      let repairedPreActions: CompiledAction[] = [];
       costReplay = addCost(costReplay, first.cost);
 
       if (first.outcome === "PASS") {
@@ -426,9 +431,31 @@ export class ReplayRunner {
           }
 
           const currentAction = proposal.corrected_action;
+          const proposedPre = proposal.pre_actions ?? [];
+          // ADR-0024: recorded pre-actions that ran before the failure stay.
+          // They already acted on this page, so the retry does not run them
+          // again, and the repaired step keeps them in front of the repair's.
+          const keptPre = (step.pre_actions ?? []).slice(0, first.pre_action_count ?? 0);
+          if (keptPre.length + proposedPre.length > MAX_PRE_ACTIONS) {
+            final = {
+              step_index: step.step_index,
+              outcome: "REPAIR_EXHAUSTED",
+              replay_valid: false,
+              mode: "repair",
+              cost: proposeCost,
+              repair_attempt: attempt,
+              assertion_strength: step.assertion.strength,
+              first_pass_outcome: first.outcome,
+              error_message:
+                `repair would give step ${step.step_index} ` +
+                `${keptPre.length + proposedPre.length} pre-actions (max ${MAX_PRE_ACTIONS})`,
+            };
+            break;
+          }
           const retry = await this.attemptStep({
             program,
             step,
+            preActions: proposedPre,
             action: currentAction,
             params,
             runId,
@@ -445,6 +472,7 @@ export class ReplayRunner {
             selfHealed = true;
             repaired = true;
             repairedAction = currentAction;
+            repairedPreActions = [...keptPre, ...proposedPre];
             final = {
               step_index: step.step_index,
               outcome: "REPAIRED_PASS",
@@ -455,6 +483,9 @@ export class ReplayRunner {
               time_to_repair_ms: timeToRepair,
               assertion_strength: step.assertion.strength,
             };
+            if (retry.pre_action_count !== undefined) {
+              final.pre_action_count = retry.pre_action_count;
+            }
             break;
           }
 
@@ -519,7 +550,7 @@ export class ReplayRunner {
       this.emitStepMetric(program, runId, final);
       // After the metric, deliberately: the observation must never be able to
       // influence what was measured. See StepOutcomeObservation.
-      this.observeStep(program, runId, final, repairedAction);
+      this.observeStep(program, runId, final, repairedAction, repairedPreActions);
 
       if (!SUCCESS_OUTCOMES.has(final.outcome)) {
         // Stop on hard failure after repair exhaustion.
@@ -580,6 +611,8 @@ export class ReplayRunner {
   private async attemptStep(args: {
     program: CompiledProgram;
     step: CompiledStep;
+    /** ADR-0024: run in order before `action`; the assertion is checked after `action` only. */
+    preActions: CompiledAction[];
     action: CompiledAction;
     params: ParamBindings;
     runId: string;
@@ -587,7 +620,7 @@ export class ReplayRunner {
     repairAttempt: number;
     dryIndex: number;
   }): Promise<StepAttemptResult> {
-    const { step, action, params, mode, repairAttempt, dryIndex } = args;
+    const { step, preActions, action, params, mode, repairAttempt, dryIndex } = args;
 
     if (this.dryRun) {
       // First-pass uses dryRunOutcomes. A repair retry (only reached when a
@@ -627,7 +660,25 @@ export class ReplayRunner {
       };
     }
 
+    let preCompleted = 0;
     const { result, wall_clock_ms } = await measureWallClock(async () => {
+      // A pre-action that fails fails the step, with its own outcome: the
+      // repair loop then sees exactly which part of the sequence broke, and
+      // `preCompleted` says how much of it already acted on the page.
+      for (const pre of preActions) {
+        const preResult = await executeAction(this.page!, pre, params, {
+          networkIdleWaitMs: this.networkIdleWaitMs,
+        });
+        if (!preResult.ok) {
+          return {
+            outcome: (preResult.outcome ?? "PAGE_ERROR") as StepOutcome,
+            message:
+              `pre-action ${preCompleted + 1} of ${preActions.length}: ` +
+              (preResult.message ?? "failed"),
+          };
+        }
+        preCompleted += 1;
+      }
       const actionResult = await executeAction(this.page!, action, params, {
         networkIdleWaitMs: this.networkIdleWaitMs,
       });
@@ -663,6 +714,7 @@ export class ReplayRunner {
       assertion_strength: step.assertion.strength,
     };
     if (mode === "repair") out.repair_attempt = repairAttempt;
+    if (preCompleted > 0) out.pre_action_count = preCompleted;
     if (result.message !== undefined) out.error_message = result.message;
     if (result.notes !== undefined) out.notes = result.notes;
     return out;
@@ -681,6 +733,7 @@ export class ReplayRunner {
     runId: string,
     final: StepAttemptResult,
     repairedAction: CompiledAction | undefined,
+    repairedPreActions: CompiledAction[],
   ): void {
     if (!this.onStepOutcome) return;
     const observation: StepOutcomeObservation = {
@@ -694,6 +747,7 @@ export class ReplayRunner {
         run_id: runId,
         repair_attempt: final.repair_attempt ?? 1,
         corrected_action: repairedAction,
+        pre_actions: repairedPreActions,
       };
     }
     try {
@@ -733,6 +787,9 @@ export class ReplayRunner {
     }
     if (step.assertion_strength !== undefined) {
       row.assertion_strength = step.assertion_strength;
+    }
+    if (step.pre_action_count !== undefined) {
+      row.pre_action_count = step.pre_action_count;
     }
     // Denormalized onto the step row so hit-rate aggregates from step rows
     // alone (#67) without joining to the run row — the same reason `site_key`

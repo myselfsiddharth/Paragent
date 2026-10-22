@@ -169,6 +169,24 @@ describe("request shape", () => {
     expect(schema).not.toContain("assertion");
     expect(schema).not.toContain("timeout_ms\":{\"type\":\"object");
   });
+
+  it("passes through pre_actions (ADR-0024) and drops an over-long sequence whole", async () => {
+    const pre = { ...goodAction, locator_fallback_chain: [{ strategy: "role_name", role: "button", name: "TestData" }] };
+    const ok = fakeClient(() =>
+      response({ content: [{ type: "text", text: JSON.stringify({ corrected_action: goodAction, pre_actions: [pre] }) }] }),
+    );
+    const p = await new AnthropicRepairModelClient({ client: ok.client }).propose(context());
+    expect(p.pre_actions).toEqual([pre]);
+    expect(p.corrected_action).toEqual(goodAction);
+
+    const long = fakeClient(() =>
+      response({ content: [{ type: "text", text: JSON.stringify({ corrected_action: goodAction, pre_actions: [pre, pre, pre] }) }] }),
+    );
+    const q = await new AnthropicRepairModelClient({ client: long.client }).propose(context());
+    expect(q.corrected_action).toBeNull();
+    expect(q.pre_actions).toBeUndefined();
+    expect(q.notes).toMatch(/max 2/);
+  });
 });
 
 describe("token accounting", () => {

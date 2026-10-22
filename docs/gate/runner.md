@@ -203,7 +203,8 @@ model and effort that produced it is not reproducible.
 ## Invariants
 
 1. **Assertions are immutable in repair.** `deepFreeze` + `assertAssertionUnchanged` — proposals
-   may only supply `corrected_action`. Two independent checks run after every proposal
+   may only supply `corrected_action`, plus up to two `pre_actions` to run before it (ADR-0024),
+   each validated by the same `sanitizeProposedAction` gate. Two independent checks run after every proposal
    (`replay.ts`): one against `ctx.assertion` (catches a client that reassigns the property it was
    handed) and one against the live `step.assertion` (catches a client that mutates the original,
    non-frozen object reachable via `ctx.step`) — a third check re-verifies `step.assertion` after

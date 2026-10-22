@@ -200,6 +200,12 @@ in an append-only store, and the field would linger as an unread artifact.
 Reversing decision 3 (MISS → prefix replay) is not a reversal but a new
 capability, and needs the in-flight handoff that does not exist.
 
+## Later amendments
+
+- **[ADR-0024](ADR-0024-sequence-repair.md) (#213).** A repair may insert up to two actions before a
+  step's own, stored as the row's `pre_actions`. They are part of the step, not new steps:
+  `steps_total` is unchanged.
+
 ## Open questions / what I could not verify
 
 - **Whether MISS-on-partial is the right long-run behaviour.** It is right today

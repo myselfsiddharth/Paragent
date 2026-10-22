@@ -43,6 +43,8 @@ export interface StepOutcomeReport {
     run_id: string;
     repair_attempt: number;
     corrected_action: CacheRow["compiled_action"];
+    /** The step's pre-actions after the repair (ADR-0024). Empty clears them. */
+    pre_actions?: CacheRow["compiled_action"][];
   };
 }
 
@@ -80,7 +82,9 @@ function emptyChainCause(row: CacheRow): string {
     case "tenant_locator_text":
     case "tainted_attribute":
     case "non_vocab_role":
-      return "every corrected locator was tenant-tainted";
+      // ADR-0024: "an action" because it may be one of the repair's
+      // pre-actions; any of them losing every locator refuses the whole row.
+      return "every locator of a repaired action was tenant-tainted";
     default:
       return (
         "the corrected action was written with no usable locator " +
