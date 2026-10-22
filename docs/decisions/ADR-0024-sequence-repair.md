@@ -106,11 +106,31 @@ before.
 
 ## Consequences
 
-- The 10.0.13 → 12.2.1 modal case is expressible in **one** attempt. The modal's controls are in the
-  repair context first (ADR-0023), and "Change Visualization" is behind them in the same capture.
 - Steps repaired this way replay **first-pass valid** with no model call, as the persistence half of
   the issue asks. `pre_action_count` stays on those rows, so the report can still separate them.
 - The gate number is not re-measured by this ADR. The next matrix run is.
+
+### Measured live on Grafana 10.0.13, step 2 (2026-10-22)
+
+- **The mechanism works.** A sequence repair ("Paragent TestData Tags TestData", then "Change
+  Visualization") executed both actions, and the picker opened (the Stat card was visible).
+- **Step 2 still fails, on its post-condition.** The check compiled from 9.5.21 is "the clicked
+  control is still visible". On 10.0.13 the toggle **disappears** when the picker opens, so the check
+  is false while the step did exactly the right thing. Assertions are frozen under repair, so no
+  repair can pass this step. This is ADR-0022's open question ("a `locator_ref` check is exactly as
+  strong as the copied-locator check it replaces") showing up live. It needs a post-condition that
+  proves the step's outcome (the #210 family), not a repair change.
+- **Qwen (Voyager) uses `pre_actions` but picks the wrong option.** With the original prompt it
+  ignored the field. With the explicit dialog rule now in the prompt it uses the field every time
+  (2/2), but it closes the dialog instead of choosing a data source. Closing leaves the editor on
+  10.0.13. The payload gives the model no task intent, and the card's "default" tag is not part of
+  its accessible name (ADR-0023). Telling it what the task is for would mean adding something such
+  as `task_key` to the egress payload. That is a boundary change, and it is left for a decision.
+- **Two attempts can collide.** Attempt 1's pre-action closed the modal and its corrected action
+  then failed the check, so attempt 2's identical pre-action had nothing to click. This is the
+  failed-attempt rule below, observed.
+- **Found and fixed on the way:** captured names were raw `textContent`, so the model was shown
+  names no locator could match (fixed in ADR-0023's capture).
 
 ## Open questions / what I could not verify
 
@@ -123,4 +143,5 @@ before.
 - **Actions from failed attempts are not persisted.** If attempt 2 passes only because attempt 1's
   action changed the page, the stored sequence lacks it, and the next replay repairs again. This is
   measured, not hidden: it shows up as another repair.
-- **Whether models use `pre_actions` when they should.** Not measured until the next live run.
+- **Task intent in the egress.** It is needed for any repair that has to *choose* (a data source,
+  an audience) rather than find. It is not decided here.
