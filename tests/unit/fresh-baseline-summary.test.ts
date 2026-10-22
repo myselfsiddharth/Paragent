@@ -172,3 +172,26 @@ describe("successes and protocol fields", () => {
     expect(summary.kind).toBe("fresh_baseline_run");
   });
 });
+
+describe("transport-aborted attempts (Voyager live run, 2026-10-17)", () => {
+  it("toRunRecord marks an aborted attempt unmeasured, so the mean excludes its truncated cost", async () => {
+    const { toRunRecord, buildBaselineSummary } = await import("../../experiments/gate-v1/fresh-baseline.js");
+    const full = toRunRecord(
+      { run_id: "a", task_success: true, turns: 25, notes: "done", cost_fresh: { tokens_in: 400_000, tokens_out: 900, wall_clock_ms: 180_000 } },
+      false,
+    );
+    const cut = toRunRecord(
+      { run_id: "b", task_success: false, turns: 20, notes: "fetch failed", aborted: "transport", cost_fresh: { tokens_in: 100_000, tokens_out: 300, wall_clock_ms: 60_000 } },
+      false,
+    );
+    expect(full.unmeasured).toBe(false);
+    expect(cut.unmeasured).toBe(true);
+    expect(cut.aborted).toBe("transport");
+    const summary = buildBaselineSummary({
+      records: [full, cut], dryRun: false, effort: "n/a", siteKey: "s", taskKey: "t", testbedVersion: "9.5.21", taskGoal: "g",
+    });
+    expect(summary.measured_runs).toBe(1);
+    expect(summary.runs_attempted).toBe(2);
+    expect(summary.mean_cost_fresh.tokens_in).toBe(400_000);
+  });
+});

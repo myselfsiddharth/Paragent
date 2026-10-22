@@ -152,16 +152,37 @@ export function contextExpression(level: ContextLevel): string {
   const selector =
     level === "tree" ? `${interactiveSelector},${structuralSelector}` : interactiveSelector;
 
+  // ADR-0021: controls built as a role-less <div aria-label> with a script click
+  // handler. Grafana 9.5.21's visualization picker card ("Plugin visualization
+  // item Stat") is one; it matched nothing above, so neither the repair model
+  // nor the fresh baseline could ever see — or therefore target — it. They are
+  // admitted only when they render as clickable (cursor: pointer), so labelled
+  // layout wrappers such as "TestData series count" stay out. No new attribute
+  // is read: aria-label was already the first source of every name here. They
+  // are reported with their true ARIA role, "generic"; `resolveLocator` maps
+  // role_name + generic to an exact label lookup, because getByRole("generic")
+  // never matches a name.
+  const labelledClickableSelector = "[aria-label]";
+
   return `(() => {
     if (${level === "landmarks" ? "true" : "false"}) return [];
     ${VISIBILITY_PREDICATE_JS}
     const out = [];
     const seen = new Set();
-    for (const el of document.querySelectorAll(${JSON.stringify(selector)})) {
+    const primary = Array.from(document.querySelectorAll(${JSON.stringify(selector)}));
+    const primarySet = new Set(primary);
+    const extra = Array.from(document.querySelectorAll(${JSON.stringify(labelledClickableSelector)}))
+      .filter((el) => !primarySet.has(el) && !el.hasAttribute("role")
+        && getComputedStyle(el).cursor === "pointer");
+    const extraSet = new Set(extra);
+    const candidates = primary.concat(extra)
+      .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
+    for (const el of candidates) {
       if (!paragentIsVisible(el)) continue;
 
       // Role: explicit first, then a small implicit map. No text is read here.
       let role = el.getAttribute("role");
+      if (!role && extraSet.has(el)) role = "generic";
       if (!role) {
         const tag = el.tagName.toLowerCase();
         if (tag === "a") role = "link";
@@ -171,9 +192,17 @@ export function contextExpression(level: ContextLevel): string {
         else if (tag === "h1" || tag === "h2" || tag === "h3") role = "heading";
         else if (tag === "input") {
           const t = (el.getAttribute("type") || "text").toLowerCase();
+          // The ARIA implicit roles Playwright's role engine uses. "textbox" for
+          // every other type was a lie for number/range/search inputs: the gate
+          // task's "Series count" is type=number (spinbutton), the model was told
+          // textbox, and getByRole("textbox") never matched it — 19 of 30 turns
+          // of a fresh-baseline attempt, spent on one field.
           role = t === "checkbox" ? "checkbox"
                : t === "radio" ? "radio"
-               : t === "submit" || t === "button" ? "button"
+               : t === "submit" || t === "button" || t === "reset" ? "button"
+               : t === "number" ? "spinbutton"
+               : t === "range" ? "slider"
+               : t === "search" ? "searchbox"
                : "textbox";
         } else role = tag;
       }
@@ -203,6 +232,19 @@ export function contextExpression(level: ContextLevel): string {
       }
       if (!name && (role === "button" || role === "link" || role === "heading" || role === "tab" || role === "menuitem" || role === "option")) {
         name = (el.textContent || "").trim();
+      }
+      // ADR-0021: a control with no accessible name of its own takes the
+      // aria-label of its nearest labelled container (Grafana's panel-title
+      // input sits in "Panel options Title field property editor" and is
+      // otherwise an indistinguishable textbox ""). Still aria-label only — the
+      // allowlisted attribute every name here already comes from. Bounded, and
+      // never for "generic" (those are named by their own label by definition).
+      if (!name && role !== "generic") {
+        let anc = el.parentElement;
+        for (let depth = 0; anc && anc !== document.body && depth < 8; depth++, anc = anc.parentElement) {
+          const label = anc.getAttribute("aria-label");
+          if (label) { name = label; break; }
+        }
       }
       name = name.replace(/\\s+/g, " ").slice(0, 120);
 

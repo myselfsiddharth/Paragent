@@ -64,6 +64,8 @@ export interface FreshBaselineRunResult {
   turns: number;
   /** Never emitted onto the metric row (no field for it); carried for the caller's own ledger. */
   notes: string;
+  /** Carried from the client: the attempt was cut short by the network. */
+  aborted?: "transport";
 }
 
 function nowIso(): string {
@@ -132,6 +134,7 @@ export class FreshBaselineRunner {
         cost_fresh: cost,
         turns: sanitizeCount(attempt.turns),
         notes: attempt.notes ?? "",
+        ...(attempt.aborted ? { aborted: attempt.aborted } : {}),
       };
     } catch (err) {
       // Cannot be measured at all — zeros, per #39's explicit constraint, and

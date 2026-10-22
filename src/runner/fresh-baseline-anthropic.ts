@@ -134,7 +134,7 @@ export const FRESH_TURN_SCHEMA = {
   },
 } as const;
 
-const SYSTEM_PROMPT = [
+export const FRESH_SYSTEM_PROMPT = [
   "You are driving a real web browser to accomplish a stated task, starting from",
   "nothing: you have no recorded steps, no saved locators, and no prior attempt to",
   "consult. You see only the task goal and the current page.",
@@ -168,7 +168,7 @@ interface UsageLike {
   cache_creation_input_tokens?: number | null;
 }
 
-interface TurnDecision {
+export interface TurnDecision {
   done: boolean;
   success?: boolean;
   action?: {
@@ -188,7 +188,7 @@ interface TurnDecision {
  * page through the identical execution path a replay does, so a difference in
  * outcome is a difference in *reasoning*, never a difference in *execution*.
  */
-function toCompiledAction(action: NonNullable<TurnDecision["action"]>): {
+export function toCompiledAction(action: NonNullable<TurnDecision["action"]>): {
   compiled: CompiledAction;
   params: ParamBindings;
 } {
@@ -216,7 +216,7 @@ function toCompiledAction(action: NonNullable<TurnDecision["action"]>): {
   return { compiled, params };
 }
 
-function isValidTurnDecision(raw: unknown): raw is TurnDecision {
+export function isValidTurnDecision(raw: unknown): raw is TurnDecision {
   if (typeof raw !== "object" || raw === null) return false;
   const obj = raw as Record<string, unknown>;
   if (typeof obj["done"] !== "boolean") return false;
@@ -310,7 +310,7 @@ export class AnthropicFreshBaselineClient implements FreshBaselineClient {
         response = await this.client.messages.create({
           model: this.model,
           max_tokens: this.maxTokens,
-          system: SYSTEM_PROMPT,
+          system: FRESH_SYSTEM_PROMPT,
           messages,
           // No temperature / top_p / top_k — rejected with a 400 on this model.
           output_config: {

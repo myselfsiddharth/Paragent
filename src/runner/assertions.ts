@@ -48,6 +48,9 @@ function templateToRegex(template: string): RegExp {
   return new RegExp(`^${withHoles}$`);
 }
 
+/** How often `url-matches` re-reads the URL while waiting for it to settle. */
+const URL_POLL_INTERVAL_MS = 100;
+
 export async function evaluateAssertion(
   page: Page,
   assertion: Assertion,
@@ -133,32 +136,41 @@ export async function evaluateAssertion(
       }
 
       case "url-matches": {
+        // Polled until `timeout_ms`, like every other assertion type here. This
+        // used to read `page.url()` once, immediately — and a single-page app
+        // that settles its URL client-side (Grafana appends `?orgId=1` after the
+        // router boots) failed step 0 of the gate bundle on its own recording
+        // version, in ~0.4s, on every run. Waiting changes nothing for a URL
+        // that is genuinely wrong: it still fails, just at the deadline.
         const urlTpl =
           assertion.target?.url_template ?? assertion.expected?.template;
         const regexTpl = assertion.expected?.regex_template;
-        const url = page.url();
-        if (regexTpl) {
-          const re = new RegExp(interpolate(regexTpl, params));
-          if (re.test(url)) return { outcome: "PASS" };
+        if (!regexTpl && !urlTpl) {
           return {
-            outcome: classificationToOutcome(assertion),
-            message: `url ${JSON.stringify(url)} !~ /${regexTpl}/`,
+            outcome: "ASSERTION_FAILED",
+            message: "url-matches missing url_template/regex_template",
           };
         }
-        if (urlTpl) {
-          const expected = interpolate(urlTpl, params);
-          if (url === expected || templateToRegex(urlTpl).test(url)) {
-            return { outcome: "PASS" };
-          }
-          return {
-            outcome: classificationToOutcome(assertion),
-            message: `url ${JSON.stringify(url)} !~ template ${JSON.stringify(urlTpl)}`,
-          };
-        }
-        return {
-          outcome: "ASSERTION_FAILED",
-          message: "url-matches missing url_template/regex_template",
+        const matches = (url: string): boolean => {
+          if (regexTpl) return new RegExp(interpolate(regexTpl, params)).test(url);
+          const expected = interpolate(urlTpl!, params);
+          return url === expected || templateToRegex(urlTpl!).test(url);
         };
+        const deadline = Date.now() + timeout;
+        let url = page.url();
+        while (!matches(url)) {
+          if (Date.now() >= deadline) {
+            return {
+              outcome: classificationToOutcome(assertion),
+              message: regexTpl
+                ? `url ${JSON.stringify(url)} !~ /${regexTpl}/`
+                : `url ${JSON.stringify(url)} !~ template ${JSON.stringify(urlTpl)}`,
+            };
+          }
+          await new Promise((resolve) => setTimeout(resolve, URL_POLL_INTERVAL_MS));
+          url = page.url();
+        }
+        return { outcome: "PASS" };
       }
 
       case "count-equals": {

@@ -76,6 +76,13 @@ export interface FreshBaselineAttempt {
    * `run-matrix.ts`'s `ledgerRow()` already takes for `first_pass_outcome`.
    */
   notes?: string;
+  /**
+   * Set when the attempt was cut short by the network, not by the model —
+   * no HTTP response came back for a turn. Its token count is a truncation,
+   * so a baseline summary treats it as unmeasured rather than averaging a
+   * partial cost into `mean(cost_fresh)`.
+   */
+  aborted?: "transport";
 }
 
 export interface FreshBaselineClient {

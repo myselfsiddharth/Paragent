@@ -157,7 +157,7 @@ export const REPAIR_OUTPUT_SCHEMA = {
   },
 } as const;
 
-const SYSTEM_PROMPT = [
+export const REPAIR_SYSTEM_PROMPT = [
   "You repair a browser automation step whose locator no longer resolves.",
   "You are given the failed action, the assertion's type and strength, and the",
   "visible interactive elements on the page as role/name pairs.",
@@ -238,7 +238,7 @@ export class AnthropicRepairModelClient implements RepairModelClient {
       response = await this.client.messages.create({
         model: this.model,
         max_tokens: this.maxTokens,
-        system: SYSTEM_PROMPT,
+        system: REPAIR_SYSTEM_PROMPT,
         messages: [{ role: "user", content: JSON.stringify(payload) }],
         // No temperature / top_p / top_k — rejected with a 400 on this model.
         output_config: {
