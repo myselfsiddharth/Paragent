@@ -645,6 +645,7 @@ export class ReplayRunner {
         this.page!,
         step.assertion,
         params,
+        actionResult.target ? { actionTarget: actionResult.target } : {},
       );
       return {
         outcome: assertionResult.outcome,

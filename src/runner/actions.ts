@@ -3,7 +3,7 @@
  * Sources: contracts/cache-row.schema.json; Playwright actions docs — access_date: 2026-07-24
  */
 
-import type { Page } from "playwright";
+import type { Locator, Page } from "playwright";
 import {
   LocatorNotFoundError,
   resolveWithFallback,
@@ -21,6 +21,14 @@ export interface ActionResult {
    * hint that went unanswered, not a failure. See {@link NETWORK_IDLE_WAIT_MS}.
    */
   settled?: boolean;
+  /**
+   * The locator the action actually resolved and acted on — the strategy in
+   * the fallback chain that matched, re-queryable. An assertion whose target is
+   * `{ locator_ref: "action_target" }` (ADR-0022) is evaluated against exactly
+   * this, so it follows a repaired action and never drifts to a different
+   * element through a looser strategy further down the chain.
+   */
+  target?: Locator;
 }
 
 /**
@@ -118,7 +126,7 @@ export async function executeAction(
           action.locator_fallback_chain,
         );
         await loc.click();
-        return { ok: true };
+        return { ok: true, target: loc };
       }
 
       case "fill": {
@@ -135,7 +143,7 @@ export async function executeAction(
           };
         }
         await loc.fill(String(value));
-        return { ok: true };
+        return { ok: true, target: loc };
       }
 
       case "select": {
@@ -152,7 +160,7 @@ export async function executeAction(
           };
         }
         await loc.selectOption(String(value));
-        return { ok: true };
+        return { ok: true, target: loc };
       }
 
       case "check": {
@@ -161,7 +169,7 @@ export async function executeAction(
           action.locator_fallback_chain,
         );
         await loc.check();
-        return { ok: true };
+        return { ok: true, target: loc };
       }
 
       case "uncheck": {
@@ -170,7 +178,7 @@ export async function executeAction(
           action.locator_fallback_chain,
         );
         await loc.uncheck();
-        return { ok: true };
+        return { ok: true, target: loc };
       }
 
       case "press": {
@@ -188,9 +196,9 @@ export async function executeAction(
             action.locator_fallback_chain,
           );
           await loc.press(key);
-        } else {
-          await page.keyboard.press(key);
+          return { ok: true, target: loc };
         }
+        await page.keyboard.press(key);
         return { ok: true };
       }
 
@@ -200,7 +208,7 @@ export async function executeAction(
           action.locator_fallback_chain,
         );
         await loc.hover();
-        return { ok: true };
+        return { ok: true, target: loc };
       }
 
       case "wait": {
@@ -266,7 +274,7 @@ export async function executeAction(
           };
         }
         await loc.setInputFiles(String(pathValue));
-        return { ok: true };
+        return { ok: true, target: loc };
       }
 
       case "custom": {

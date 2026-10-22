@@ -70,6 +70,7 @@ Integrity surface: **[INTEGRITY-AUDIT.md](./INTEGRITY-AUDIT.md)**.
 | [ADR-0019](decisions/ADR-0019-pool-precheck-topology.md) | Compiler `decidePoolEligibility` strips `tenant_scoped` siblings like `buildPoolRow`; live bundle `pool_eligible` moves 1/12 → 7/12 | accepted | 2026-08-21 | Issue #170. Direction invariant unchanged |
 | [ADR-0020](decisions/ADR-0020-delegated-repair-cost-provenance.md) | Delegated repair client (host pays, no API key); `cost_measured`/`repair_cost_measured` mark a repair nobody could count, and those rows are **excluded** from the §9 cost aggregates rather than folded in as zeros | accepted | 2026-09-06 | Issue #189. Outcome aggregates still count them. **Does not unblock #39** — a measured denominator still needs a real `usage` block; no delegated repair has run against a real host agent |
 | [ADR-0021](decisions/ADR-0021-first-live-replay-corrections.md) | First live replay on 9.5.21: page context now shows role-less clickable controls (`generic`), truthful input roles and container names (amends ADR-0012; no new attribute read); locators match exactly; `url-matches` waits; recorder stops emitting impossible structural paths. Gate task re-recorded as `-r2` | review | 2026-10-17 | r2 bundle replays 12/12 on its own version for the first time. Pre-ADR gate numbers are not comparable |
+| [ADR-0022](decisions/ADR-0022-postcondition-anchoring.md) | Post-conditions on the acted-on element reference it (`locator_ref: action_target`) instead of copying a structural path; URL checks enforce recorded and state-bearing query keys, ignore view state. Contract: `assertion.schema.json` `target.locator_ref` | review | 2026-10-18 | Issue #211. Recompiled `-r2`: actions identical, pool eligibility unchanged (7/12), 12/12 on 9.5.21 |
 
 ---
 
@@ -120,7 +121,7 @@ Integrity surface: **[INTEGRITY-AUDIT.md](./INTEGRITY-AUDIT.md)**.
 | Doc | What it is | Status | Last true | Notes |
 | --- | --- | --- | --- | --- |
 | [testbed.md](gate/testbed.md) | Grafana OSS matrix | draft | 2026-07-25 | ADR-0003 |
-| [gate-result-2026-10-17.md](gate/gate-result-2026-10-17.md) | **First live matrix run** — 48 runs, 8 pins, Voyager repair. No verdict (step-execution floor not met: 150 < 400). 9.5.21 6/6; every later pin 0/6, all on post-conditions. Repair vs fresh 0.3% tokens | review | 2026-10-18 | Step-validity 72% executed / 19% compiled; task success 12.5%; self-heal 0/42. Issues #209–#213 |
+| [gate-result-2026-10-17.md](gate/gate-result-2026-10-17.md) | **First live matrix run** — 48 runs, 8 pins, Voyager repair. No verdict (step-execution floor not met: 150 < 400). 9.5.21 6/6; every later pin 0/6, all on post-conditions. Repair vs fresh 0.3% tokens | review | 2026-10-18 | Step-validity 72% executed / 19% compiled; task success 12.5%; self-heal 0/42. Issues #209–#213. **Re-run after ADR-0022**: step-validity 78% / 26%, task success unchanged; every remaining failure is an inserted step (#213) |
 | [churn-notes.md](gate/churn-notes.md) | Qualitative DOM churn notes per version transition | draft | 2026-08-21 | Issue #30; predictions vs observed; §9 rates still `no_data` |
 | [recorder.md](gate/recorder.md) | Recorder | draft | 2026-07-24 | — |
 | [compiler.md](gate/compiler.md) | Compiler | draft | 2026-08-12 | Its own `1/12` pre-check number annotated against ADR-0017's `7/12` authoritative recount |

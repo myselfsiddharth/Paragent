@@ -35,7 +35,10 @@
     },
     "strength": {
       "type": "string",
-      "enum": ["strong", "weak"],
+      "enum": [
+        "strong",
+        "weak"
+      ],
       "description": "strong = unambiguous proof the step achieved its purpose; weak = consistent with success but also with several failures. Weak must stay labelled — silent promotion is forbidden."
     },
     "target": {
@@ -59,13 +62,27 @@
                 "css_vocab"
               ]
             },
-            "role": { "type": "string" },
-            "name": { "type": "string" },
-            "label": { "type": "string" },
-            "testid": { "type": "string" },
-            "structural_path": { "type": "string" },
-            "text": { "type": "string" },
-            "css": { "type": "string" }
+            "role": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "testid": {
+              "type": "string"
+            },
+            "structural_path": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "css": {
+              "type": "string"
+            }
           }
         },
         "url_template": {
@@ -74,6 +91,13 @@
         "count_scope": {
           "type": "string",
           "description": "CSS/role scope for count-equals."
+        },
+        "locator_ref": {
+          "type": "string",
+          "enum": [
+            "action_target"
+          ],
+          "description": "ADR-0022: evaluate against the element this step's action resolved and acted on, instead of a copied locator. Follows a repaired action; carries no page text."
         }
       }
     },

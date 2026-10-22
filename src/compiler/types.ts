@@ -184,6 +184,8 @@ export interface Assertion {
     locator?: CompiledLocator;
     url_template?: string;
     count_scope?: string;
+    /** ADR-0022: "the element this step's action resolved" — instead of a copied locator. */
+    locator_ref?: "action_target";
   };
   expected?: AssertionExpected;
   timeout_ms: number;
