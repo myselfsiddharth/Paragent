@@ -108,6 +108,14 @@ export const CONTEXT_ATTRIBUTE_ALLOWLIST: readonly string[] = [
   "aria-hidden",
   "disabled",
   "type",
+  // Matched by presence in a selector, never read as text: an <a> needs an
+  // href to be a link, a <dialog> needs `open` to be open.
+  "href",
+  "open",
+  // Label association only: an element's id is used to find <label for=id>,
+  // and neither value enters a capture.
+  "id",
+  "for",
 ];
 
 /**
@@ -182,8 +190,8 @@ export function contextExpression(level: ContextLevel): string {
   // dialog's elements go first, each flagged `in_dialog`. When it is declared
   // modal (aria-modal, or a <dialog> opened with showModal()), the elements
   // behind it are inert and are dropped. A non-modal dialog only demotes them.
-  // The one new attribute read is aria-modal, which is structural and on the
-  // allowlist. A <dialog>'s `open` is only matched by the selector.
+  // The attributes newly read are aria-modal and aria-hidden, both structural
+  // and on the allowlist. A <dialog>'s `open` is only matched by the selector.
   const dialogSelector = "[role=dialog],[role=alertdialog],[aria-modal=true],dialog[open]";
 
   // A name read from content must be the name a locator will match. Raw
@@ -208,7 +216,7 @@ export function contextExpression(level: ContextLevel): string {
           if (cs.display === "none" || cs.visibility === "hidden") continue;
           const spaced = cs.display !== "inline" || child.tagName === "BR";
           if (spaced) parts.push(" ");
-          const label = child.getAttribute("aria-label");
+          const label = (child.getAttribute("aria-label") || "").trim();
           if (label) parts.push(label);
           else walk(child);
           if (spaced) parts.push(" ");
@@ -232,18 +240,45 @@ export function contextExpression(level: ContextLevel): string {
     const extraSet = new Set(extra);
     let candidates = primary.concat(extra)
       .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
-    // Last in document order is the frontmost: portals append to the body, and
-    // a dialog nested in another comes after its parent.
-    const dialogs = Array.from(document.querySelectorAll(${JSON.stringify(dialogSelector)}))
-      .filter((el) => paragentIsVisible(el));
-    const dialog = dialogs.length > 0 ? dialogs[dialogs.length - 1] : null;
-    if (dialog) {
-      let modal = dialog.getAttribute("aria-modal") === "true";
-      if (!modal) {
-        try { modal = dialog.matches(":modal"); } catch (e) { modal = false; }
+    // A dialog is open only if it is rendered AND exposed: a closed modal kept
+    // in the DOM at opacity 0, or under aria-hidden, would otherwise be taken
+    // as the frontmost dialog and, if modal, drop the whole real page.
+    const paragentDialogOpen = (el) => {
+      if (!paragentIsVisible(el)) return false;
+      if (el.closest('[aria-hidden="true"]')) return false;
+      // Opacity is read off computed style, not the shared predicate's API,
+      // which tests/unit/landmarks.test.ts keeps to exactly one carrier.
+      for (let n = el; n && n !== document.body; n = n.parentElement) {
+        if (getComputedStyle(n).opacity === "0") return false;
       }
-      const inside = candidates.filter((el) => dialog.contains(el));
-      candidates = modal ? inside : inside.concat(candidates.filter((el) => !dialog.contains(el)));
+      return true;
+    };
+    const paragentIsModal = (el) => {
+      if (el.getAttribute("aria-modal") === "true") return true;
+      try { return el.matches(":modal"); } catch (e) { return false; }
+    };
+    // Frontmost: a declared modal outranks any non-modal dialog (a popover or
+    // banner rendered after a modal is not in front of it). Within a kind,
+    // last in document order wins: portals append to the body, and a dialog
+    // nested in another comes after its parent.
+    const dialogs = Array.from(document.querySelectorAll(${JSON.stringify(dialogSelector)}))
+      .filter(paragentDialogOpen);
+    const modals = dialogs.filter(paragentIsModal);
+    const dialog = modals.length > 0 ? modals[modals.length - 1]
+      : dialogs.length > 0 ? dialogs[dialogs.length - 1] : null;
+    let insideSet = null;
+    if (dialog) {
+      const inside = [], after = [], before = [];
+      for (const el of candidates) {
+        if (dialog.contains(el)) inside.push(el);
+        else if (dialog.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) after.push(el);
+        else before.push(el);
+      }
+      insideSet = new Set(inside);
+      // Rendered after the dialog and outside it: a menu or listbox the dialog
+      // opened, portaled to the end of the body, on top of it. Kept even
+      // behind a modal; only what precedes a modal is inert.
+      candidates = paragentIsModal(dialog) ? inside.concat(after) : inside.concat(after, before);
     }
     for (const el of candidates) {
       if (!paragentIsVisible(el)) continue;
@@ -279,13 +314,13 @@ export function contextExpression(level: ContextLevel): string {
       // associated <label>, then trimmed text for elements whose name comes
       // from content. An input's VALUE is never read — that is the line this
       // capture does not cross, at any level.
-      let name = el.getAttribute("aria-label") || "";
+      let name = (el.getAttribute("aria-label") || "").trim();
       if (!name) {
         const ref = el.getAttribute("aria-labelledby");
         if (ref) {
           const labelled = ref.split(/\\s+/).map((id) => {
             const n = document.getElementById(id);
-            return n ? paragentTextName(n) : "";
+            return n ? ((n.getAttribute("aria-label") || "").trim() || paragentTextName(n)) : "";
           }).filter(Boolean).join(" ");
           if (labelled) name = labelled;
         }
@@ -329,7 +364,7 @@ export function contextExpression(level: ContextLevel): string {
 
       const entry = { role: role, name: name };
       if (state.length > 0) entry.state = state;
-      if (dialog && dialog.contains(el)) entry.in_dialog = true;
+      if (insideSet && insideSet.has(el)) entry.in_dialog = true;
       out.push(entry);
       if (out.length >= 120) break;
     }

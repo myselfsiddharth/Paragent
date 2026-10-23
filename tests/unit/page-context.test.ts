@@ -164,13 +164,21 @@ describe("contextExpression", () => {
     }
   });
 
-  it("reads only allowlisted attributes", () => {
-    // CONTEXT_ATTRIBUTE_ALLOWLIST used to be documentation only. #212 added an
-    // attribute to it, and this test is what makes the list hold.
+  it("reads only allowlisted attributes, by call, by selector, or by property", () => {
+    // CONTEXT_ATTRIBUTE_ALLOWLIST used to be documentation only. #212 added
+    // attributes to it, and this test is what makes the list hold. Three
+    // routes read an attribute: getAttribute/hasAttribute, an attribute
+    // selector (`a[href]`, `label[for=...]`), and the `id` property.
     for (const level of CONTEXT_LEVELS) {
-      const read = [...contextExpression(level).matchAll(/(?:get|has)Attribute\("([^"]+)"\)/g)]
-        .map((m) => m[1]);
-      expect(read.length).toBeGreaterThan(0);
+      const src = contextExpression(level);
+      const read = [
+        ...[...src.matchAll(/(?:get|has)Attribute\("([^"]+)"\)/g)].map((m) => m[1]),
+        ...[...src.matchAll(/\[([a-z][a-z-]*)(?=[=\]])/g)].map((m) => m[1]),
+        ...(/\.id\b/.test(src) ? ["id"] : []),
+      ];
+      expect(read).toContain("aria-modal");
+      expect(read).toContain("href");
+      expect(read).toContain("for");
       for (const attr of read) expect(CONTEXT_ATTRIBUTE_ALLOWLIST).toContain(attr);
     }
   });
@@ -458,6 +466,67 @@ describe("content-derived names are accessible names (#212)", () => {
       ["Save dashboard", "inline"],
       ["Close", "hidden"],
     ] as const) {
+      expect(elements.map((e) => e.name)).toContain(name);
+      const loc = await resolveWithFallback(page, [{ strategy: "role_name", role: "button", name }]);
+      expect(await loc.getAttribute("id")).toBe(id);
+    }
+  });
+});
+
+/** Review of PR #222: dialogs the first version mis-identified, and name gaps. */
+describe("which dialog is open, and what a modal keeps (#212 review)", () => {
+  let browser: Browser;
+  let page: Page;
+  const bg = `<main><button aria-label="Background action">x</button></main>`;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("keeps a menu the modal opened, portaled to the end of the body", async () => {
+    await page.setContent(`${bg}
+      <div role="dialog" aria-modal="true"><button aria-label="Open menu">v</button></div>
+      <div role="listbox"><div role="option" aria-label="TestData">TestData</div></div>`);
+    const names = ((await capturePageState(page, "interactive")).elements ?? []).map((e) => e.name);
+    expect(names).toEqual(["Open menu", "TestData"]);
+  });
+
+  it("ignores a closed dialog left in the DOM at opacity 0 or under aria-hidden", async () => {
+    for (const closed of [
+      `<div role="dialog" aria-modal="true" style="opacity:0"><button aria-label="Ghost">g</button></div>`,
+      `<div aria-hidden="true"><div role="dialog" aria-modal="true"><button aria-label="Ghost">g</button></div></div>`,
+    ]) {
+      await page.setContent(bg + closed);
+      const { elements = [] } = await capturePageState(page, "interactive");
+      expect(elements.some((e) => e.in_dialog)).toBe(false);
+      expect(elements.map((e) => e.name)).toContain("Background action");
+    }
+  });
+
+  it("a modal outranks a non-modal popover rendered after it", async () => {
+    await page.setContent(`${bg}
+      <div role="dialog" aria-modal="true"><button aria-label="Modal choice">m</button></div>
+      <div role="dialog"><button aria-label="Popover item">p</button></div>`);
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements[0]).toEqual({ role: "button", name: "Modal choice", in_dialog: true });
+    expect(elements.find((e) => e.name === "Popover item")?.in_dialog).toBeUndefined();
+    expect(elements.map((e) => e.name)).not.toContain("Background action");
+  });
+
+  it("names: an aria-labelledby target's own aria-label wins, a blank aria-label is ignored", async () => {
+    await page.setContent(`<main>
+      <span id="x" aria-label="Foo">Bar</span><button id="lb" aria-labelledby="x">?</button>
+      <button id="blank" aria-label="  ">Save</button>
+      <button id="child"><span aria-label=" ">Visible</span></button>
+    </main>`);
+    const { resolveWithFallback } = await import("../../src/runner/locators.js");
+    const { elements = [] } = await capturePageState(page, "interactive");
+    for (const [name, id] of [["Foo", "lb"], ["Save", "blank"], ["Visible", "child"]] as const) {
       expect(elements.map((e) => e.name)).toContain(name);
       const loc = await resolveWithFallback(page, [{ strategy: "role_name", role: "button", name }]);
       expect(await loc.getAttribute("id")).toBe(id);

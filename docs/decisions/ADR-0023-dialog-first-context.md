@@ -29,13 +29,20 @@ old capture: 120 elements, **none of them a data-source choice**.
 
 ## Decision
 
-When a visible dialog is open (`[role=dialog]`, `[role=alertdialog]`, `[aria-modal=true]`, or
-`dialog[open]`), the frontmost one (the last in document order) is captured **first**.
+When a dialog is open (`[role=dialog]`, `[role=alertdialog]`, `[aria-modal=true]`, or
+`dialog[open]`), the frontmost one is captured **first**.
+
+- **Open** means rendered and exposed. It must pass the visibility predicate, have non-zero opacity,
+  and not sit under `aria-hidden="true"`. A closed modal kept in the DOM would otherwise be taken as
+  open and, if modal, drop the whole real page.
+- **Frontmost:** a declared modal outranks any non-modal dialog, so a popover or banner rendered
+  after a modal does not displace it. Within a kind, the last in document order wins.
 
 - Each of its elements carries `in_dialog: true`. Absent means "not in a dialog", so the shape of a
   capture with no dialog open is unchanged.
-- **Declared modal** (`aria-modal="true"`, or a `<dialog>` matching `:modal`): the elements behind
-  it are inert and are **dropped**.
+- **Declared modal** (`aria-modal="true"`, or a `<dialog>` matching `:modal`): the elements before
+  it in document order are inert and are **dropped**. Elements *after* it and outside it are kept,
+  because that is where a menu or listbox the dialog opened is portaled, on top of it.
 - **Not declared modal:** they are listed after the dialog's, still under the same cap. Grafana
   10.0.13's modal is in this case. It does not set `aria-modal`, so demoting rather than dropping
   is what makes the fix work there.
@@ -81,7 +88,10 @@ so it is shown only that.
 ## Consequences
 
 - `repair_context_level: interactive` rows from before and after this ADR are **not comparable**
-  on pages with an open dialog. On every other page the capture is byte-identical.
+  on pages with an open dialog. On other pages the order and flags are unchanged, but
+  **content-derived names are not**: `<div>A</div><div>B</div>` inside a button was `"AB"` and is
+  now `"A B"`, and every name is trimmed. Rows from before and after this ADR are not comparable on
+  any page where such a name was captured.
 - It does not fix step 2 on its own. Choosing the data source is an *inserted* action, which a
   single-action repair cannot supply ([#213](https://github.com/myselfsiddharth/Paragent/issues/213)).
   This ADR makes that repair possible to ground. #213 makes it possible to express.
@@ -90,6 +100,12 @@ so it is shown only that.
 
 - **Several dialogs open at once.** Only the frontmost is promoted; one behind it is listed as
   background. Nothing in the gate matrix opens two.
+- **The name rules are a hand port** of the accessible-name algorithm. Known gaps: `::before` and
+  `::after` content, a `visibility: visible` descendant inside a hidden subtree, shadow DOM, and
+  embedded controls. Each one is a name the model can be shown and no locator can match. Taking
+  names from the browser's accessibility engine would close this whole class:
+  [#227](https://github.com/myselfsiddharth/Paragent/issues/227).
+- **An off-canvas drawer** moved off screen with a transform still counts as open.
 - **A dialog that is not marked as one** (no role, no `aria-modal`, no `<dialog>`) is invisible to
   this rule. Grafana 10.0.13's data-source modal is marked. The other pins' dialogs were not
   checked.
