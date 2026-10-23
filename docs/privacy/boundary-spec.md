@@ -140,8 +140,17 @@ process.
 
 What the repair payload may carry, and nothing else: the failed step's locators (minus free
 text), the assertion's type and strength, the page URL, title, landmarks, and the role +
-accessible name of visible interactive elements. **No input values at any level** — see
-`src/shared/page-context.ts`. `serializeRepairContext()` is the only authorized shape and
+accessible name of visible interactive elements. Two later additions:
+
+- the task goal, developer-authored prose, dropped if it contains a bound value
+  ([ADR-0025](../decisions/ADR-0025-repair-task-goal.md));
+- a fill or select step's slot **names**, never values
+  ([ADR-0028](../decisions/ADR-0028-fill-repair-binding.md)).
+
+**No input values at any level** — see `src/shared/page-context.ts`. The reverse direction is
+closed too: a model's proposal cannot reference a caller's value. `param_refs` are dropped, a
+`{slot}` hole rejects the proposal, and the runner binds a corrected fill to the step's own slots
+(ADR-0028). `serializeRepairContext()` is the only authorized shape and
 `tests/canary/repair-egress.test.ts` is merge-blocking.
 
 Open, and shared with [#126](https://github.com/DevToolie/Paragent/issues/126): an accessible

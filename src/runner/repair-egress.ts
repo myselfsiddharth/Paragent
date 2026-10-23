@@ -29,8 +29,15 @@
  * | --- | --- |
  * | `params` | The runtime bindings. Values a caller supplied, including secrets. Never leaves. |
  * | `assertion.expected.template` | Carries typed holes *and*, if a compiler bug ever let one through, a literal |
- * | `step.compiled_action.param_refs` | Names of the caller's slots. Structure, but no reason for the model to need it |
+ * | slot **values** (`params`) | Covered above; only the slot *names* cross (below) |
  * | `error_message` | Playwright text that can quote page content and, on a `fill`, the value it tried |
+ *
+ * `step.param_slots` (ADR-0028) is **included** for fill and select steps:
+ * the names of the slots the step types into (`panel_title`), never their
+ * values. It used to be excluded as structure the model did not need. The
+ * first glm-5-3 matrix measured the need: told nothing, the model filled
+ * "Alias" for the panel-title step; told the slot name, it chose the title
+ * field (2/2). A name reveals what kind of field exists, not what is in it.
  *
  * `task_goal` (ADR-0025) is **included** when the caller set one: developer-
  * authored prose, the same text the fresh baseline is given. It is not page
@@ -44,6 +51,7 @@
  */
 
 import type { ContextElement, ContextLevel } from "../shared/page-context.js";
+import { requiredParamsForAction } from "./params.js";
 import { normalizeTaskGoal, paramInTaskGoal } from "./task-goal.js";
 import type { RepairContext } from "./types.js";
 
@@ -64,6 +72,11 @@ export interface RepairEgressPayload {
     action_type: string;
     /** The locator that failed, so the model knows what to replace. */
     failed_locators: Array<Record<string, string | boolean>>;
+    /**
+     * Fill/select only (ADR-0028): the names of the slots the step types
+     * into, never their values. Absent for other steps.
+     */
+    param_slots?: string[];
   };
   assertion: {
     /** Type and strength only — never `expected`. */
@@ -146,6 +159,14 @@ export function serializeRepairContext(ctx: RepairContext): RepairEgressPayload 
   // (fail closed) whoever built the context. ReplayRunner refuses such a run
   // before step 0; this is what holds for every other caller.
   const goal = normalizeTaskGoal(ctx.task_goal);
+  // Names only, copied from the compiled step through the same rule the
+  // run-start check uses (fill/select slots, nothing else), and never looked
+  // up in params. Fail closed, like the task goal: a name that contains a
+  // bound value is dropped.
+  const slots = requiredParamsForAction(ctx.step.compiled_action).filter(
+    (name) => paramInTaskGoal(name, ctx.params) === undefined,
+  );
+  if (slots.length > 0) payload.step.param_slots = slots;
   if (goal !== undefined && paramInTaskGoal(goal, ctx.params) === undefined) {
     payload.task_goal = goal;
   }
