@@ -12,6 +12,9 @@
  * Overridable via `--task-goal` (in `gate:baseline` and `gate:matrix`) for a
  * different program under test.
  */
+/** The task `DEFAULT_TASK_GOAL` describes: `--gate-task-goal` refuses any other. */
+export const GATE_TASK_KEY = "create-stat-dashboard-from-testdata";
+
 export const DEFAULT_TASK_GOAL =
   "Create a new dashboard. Add a panel to it using the TestData data source, and " +
   "configure the panel as a Stat visualization with a query alias and a series " +

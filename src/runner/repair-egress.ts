@@ -34,7 +34,8 @@
  *
  * `task_goal` (ADR-0025) is **included** when the caller set one: developer-
  * authored prose, the same text the fresh baseline is given. It is not page
- * content, and `ReplayRunner.run` refuses a goal containing a bound value.
+ * content. A goal containing a bound value is dropped here and refused by
+ * `ReplayRunner.run` before step 0.
  *
  * `error_message` is the one worth pausing on: it reads like diagnostics, and it
  * is the field a well-meaning change would add first. A Playwright locator error
@@ -43,6 +44,7 @@
  */
 
 import type { ContextElement, ContextLevel } from "../shared/page-context.js";
+import { normalizeTaskGoal, paramInTaskGoal } from "./task-goal.js";
 import type { RepairContext } from "./types.js";
 
 /**
@@ -139,8 +141,13 @@ export function serializeRepairContext(ctx: RepairContext): RepairEgressPayload 
       elements: page.elements ?? [],
     },
   };
-  if (typeof ctx.task_goal === "string" && ctx.task_goal !== "") {
-    payload.task_goal = ctx.task_goal;
+  // ADR-0025, enforced here too, at the boundary every client goes through:
+  // a blank goal is no goal, and a goal containing a bound value is dropped
+  // (fail closed) whoever built the context. ReplayRunner refuses such a run
+  // before step 0; this is what holds for every other caller.
+  const goal = normalizeTaskGoal(ctx.task_goal);
+  if (goal !== undefined && paramInTaskGoal(goal, ctx.params) === undefined) {
+    payload.task_goal = goal;
   }
   return payload;
 }

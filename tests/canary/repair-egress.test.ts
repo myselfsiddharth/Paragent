@@ -239,6 +239,14 @@ describe("repair egress: the task goal (ADR-0025)", () => {
     }
   });
 
+  it("drops a goal that contains a bound value, whoever built the context", () => {
+    // ReplayRunner refuses such a run; this is the boundary for every other caller.
+    const leaky = { ...contextWithEverything(), task_goal: `Sign in as ${CANARY.paramUser}.` };
+    const out = serializeRepairContext(leaky);
+    expect("task_goal" in out).toBe(false);
+    expect(JSON.stringify(out)).not.toContain(CANARY.paramUser);
+  });
+
   it("omits the field entirely when no goal is set", () => {
     expect("task_goal" in serializeRepairContext(contextWithEverything())).toBe(false);
   });

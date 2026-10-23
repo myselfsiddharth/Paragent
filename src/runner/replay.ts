@@ -25,6 +25,9 @@ import {
   type ContextLevel,
 } from "../shared/page-context.js";
 import { assertParamsBound } from "./params.js";
+import { normalizeTaskGoal, paramInTaskGoal, taskGoalDigest } from "./task-goal.js";
+
+export { TASK_GOAL_MIN_PARAM_LENGTH } from "./task-goal.js";
 import {
   assertAssertionUnchanged,
   MAX_PRE_ACTIONS,
@@ -163,13 +166,6 @@ export interface ReplayRunnerOptions {
 }
 
 /**
- * The shortest string param value the task-goal guard compares. Shorter
- * values ("5", "on") occur in ordinary prose, and refusing on them would
- * refuse every goal; a value that short is not a secret worth the check.
- */
-export const TASK_GOAL_MIN_PARAM_LENGTH = 4;
-
-/**
  * A task goal that contains one of the run's bound values.
  *
  * The goal crosses the egress to a third-party model, and `params` is the bag
@@ -254,9 +250,8 @@ export class ReplayRunner {
       this.cacheProgramInvalidated = options.cacheProgramInvalidated;
     }
     if (options.page !== undefined) this.page = options.page;
-    if (options.taskGoal !== undefined && options.taskGoal.trim() !== "") {
-      this.taskGoal = options.taskGoal.trim();
-    }
+    const goal = normalizeTaskGoal(options.taskGoal);
+    if (goal !== undefined) this.taskGoal = goal;
   }
 
   getMetricsEmitter(): MetricsEmitter {
@@ -289,15 +284,8 @@ export class ReplayRunner {
     assertParamsBound(program, params);
     // ADR-0025: the goal leaves the process, so it must not carry a binding.
     if (this.taskGoal !== undefined) {
-      for (const [name, value] of Object.entries(params)) {
-        if (
-          typeof value === "string" &&
-          value.length >= TASK_GOAL_MIN_PARAM_LENGTH &&
-          this.taskGoal.includes(value)
-        ) {
-          throw new TaskGoalCarriesParamError(name);
-        }
-      }
+      const leaked = paramInTaskGoal(this.taskGoal, params);
+      if (leaked !== undefined) throw new TaskGoalCarriesParamError(leaked);
     }
 
     const started = Date.now();
@@ -883,7 +871,7 @@ export class ReplayRunner {
       // reason as the context level: two self-heal rates are not comparable
       // across it, and only meaningful when a repair actually ran.
       ...(result.repair_count > 0 && this.taskGoal !== undefined
-        ? { repair_task_goal: true }
+        ? { repair_task_goal_sha256: taskGoalDigest(this.taskGoal) }
         : {}),
       ...(this.programSource !== undefined
         ? { program_source: this.programSource }

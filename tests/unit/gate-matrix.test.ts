@@ -597,6 +597,7 @@ describe("gate:matrix valued flags (#165)", () => {
     params: {},
     runs: 3,
     poolOnly: false,
+    gateTaskGoal: false,
   });
 
   it("has a sample for every flag the parser accepts", () => {

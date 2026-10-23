@@ -61,7 +61,8 @@ import {
   runVersionLive,
   type VersionSkip,
 } from "./live-run.js";
-import { DEFAULT_TASK_GOAL } from "./task-goal.js";
+import { DEFAULT_TASK_GOAL, GATE_TASK_KEY } from "./task-goal.js";
+import { normalizeTaskGoal, paramInTaskGoal, taskGoalDigest } from "../../src/runner/task-goal.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, "out");
@@ -151,6 +152,8 @@ export interface Args {
    * would mislead the repair rather than inform it.
    */
   taskGoal?: string;
+  /** `--gate-task-goal` was passed; resolved against the program at startup. */
+  gateTaskGoal: boolean;
   /**
    * Path to a measured fresh-baseline summary (#39), written by
    * `npm run gate:baseline` as `out/fresh-baseline/baseline.json`. When set,
@@ -252,7 +255,7 @@ const VALUED_FLAGS = {
 /** Flag names without the leading `--`, in declaration order. */
 export const VALUED_FLAG_NAMES = Object.keys(VALUED_FLAGS) as (keyof typeof VALUED_FLAGS)[];
 
-function parseArgs(argv: string[]): Args {
+export function parseArgs(argv: string[]): Args {
   const args: Args = {
     dryRun: false,
     help: false,
@@ -262,13 +265,14 @@ function parseArgs(argv: string[]): Args {
     params: {},
     runs: DEFAULT_RUNS_PER_VERSION,
     poolOnly: false,
+    gateTaskGoal: false,
   };
   const valued = new Set(VALUED_FLAG_NAMES.map((name) => `--${name}`));
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i] ?? "";
     if (a === "--dry-run") args.dryRun = true;
     else if (a === "--pool-only") args.poolOnly = true;
-    else if (a === "--gate-task-goal") args.taskGoal = DEFAULT_TASK_GOAL;
+    else if (a === "--gate-task-goal") args.gateTaskGoal = true;
     else if (a === "--headed") args.headed = true;
     else if (a === "--keep-up") args.keepUp = true;
     else if (a === "--no-preamble") args.preamble = false;
@@ -284,6 +288,12 @@ function parseArgs(argv: string[]): Args {
       throw new Error(`unknown argument: ${a}`);
     }
   }
+  if (args.gateTaskGoal && args.taskGoal !== undefined) {
+    throw new Error(
+      "--task-goal and --gate-task-goal are mutually exclusive: pass the gate's goal or your own, not both",
+    );
+  }
+  if (args.gateTaskGoal) args.taskGoal = DEFAULT_TASK_GOAL;
   return args;
 }
 
@@ -488,6 +498,16 @@ export async function loadCostFreshBaseline(filePath: string): Promise<Cost> {
 }
 
 /**
+ * The task goal a fresh-baseline summary was measured with (ADR-0025), or
+ * undefined. Read separately from `loadCostFreshBaseline`, which has already
+ * validated the file by the time this is asked.
+ */
+export async function loadBaselineTaskGoal(filePath: string): Promise<string | undefined> {
+  const doc = JSON.parse(await readFile(filePath, "utf8")) as { task_goal?: unknown };
+  return typeof doc.task_goal === "string" ? doc.task_goal : undefined;
+}
+
+/**
  * A measured one-time program-build payment, and the build it paid for.
  *
  * The two travel together because `ReplayRunner` refuses the cost without the
@@ -685,6 +705,7 @@ async function walkVersions(
             opts.args.runs,
             opts.args.params,
             opts.programSource,
+            opts.args.taskGoal,
           ),
         );
       }
@@ -937,6 +958,35 @@ async function main(): Promise<void> {
     return;
   }
 
+  // ADR-0025: the task goal crosses the egress, so its boundary is checked
+  // here, before anything boots, with the same rule ReplayRunner.run applies.
+  // Refusing after a container boot and a login would cost both and crash the
+  // matrix with a stack trace instead of a named exit.
+  if (args.taskGoal !== undefined) {
+    if (args.gateTaskGoal && program.task_key !== GATE_TASK_KEY) {
+      console.error(
+        `gate:matrix: --gate-task-goal is the goal of ${GATE_TASK_KEY}, but the program's ` +
+          `task_key is ${program.task_key}. A goal for the wrong task misleads the repair; ` +
+          "pass --task-goal <text> for this program instead.",
+      );
+      process.exit(2);
+      return;
+    }
+    const leaked = paramInTaskGoal(args.taskGoal, {
+      ...args.params,
+      ...(args.dryRun ? DRY_RUN_PARAMS : {}),
+    });
+    if (leaked !== undefined) {
+      console.error(
+        `gate:matrix: the task goal contains the value bound to --param ${leaked}. The goal ` +
+          "is sent to the repair model, so it must never carry a binding. Bind a value that " +
+          "does not appear in the goal.",
+      );
+      process.exit(2);
+      return;
+    }
+  }
+
   // #39: a measured fresh-baseline, broadcast onto every LIVE run row's
   // cost_fresh. Loaded (and validated) before anything boots, same posture as
   // the unbound-param check above — a caller who asked for this explicitly
@@ -956,6 +1006,19 @@ async function main(): Promise<void> {
             `tokens_out=${costFresh.tokens_out} wall_clock_ms=${costFresh.wall_clock_ms}` +
             `${costFresh.model_id ? ` model_id=${costFresh.model_id}` : ""}`,
         );
+        // ADR-0025: both sides of the §9 ratio must be told the same goal.
+        // Loud rather than fatal, like the model-id check: an exploratory
+        // run is legitimate, but it must never pass for a gate number.
+        const freshGoal = normalizeTaskGoal(await loadBaselineTaskGoal(args.costFresh));
+        const repairGoal = normalizeTaskGoal(args.taskGoal);
+        if (freshGoal !== repairGoal) {
+          console.error(
+            "gate:matrix: WARNING — the repair model's task goal " +
+              `(${repairGoal ? taskGoalDigest(repairGoal) : "none"}) differs from the fresh ` +
+              `baseline's (${freshGoal ? taskGoalDigest(freshGoal) : "none"}). The §9 ratio ` +
+              "would compare two differently informed sides; do not cite it as a gate number.",
+          );
+        }
       } catch (err) {
         console.error(`gate:matrix: ${errMessage(err)}`);
         process.exit(2);
@@ -1169,6 +1232,16 @@ async function main(): Promise<void> {
         // must not have to diff run rows against a source file to tell the
         // two apart.
         ...(costFresh ? { cost_fresh_source: args.costFresh, cost_fresh: costFresh } : {}),
+        // ADR-0025: which goal the repair model was told, by source and
+        // digest, never the text. Absent means none.
+        ...(args.taskGoal
+          ? {
+              repair_task_goal: {
+                source: args.gateTaskGoal ? "gate" : "custom",
+                sha256: taskGoalDigest(args.taskGoal),
+              },
+            }
+          : {}),
         // #39 step 4: the one-time payment, and — separately — whether a run
         // actually took it. A matrix that skipped every version leaves the
         // payment unclaimed, and a reader must be able to tell "the curve has
@@ -1217,6 +1290,7 @@ async function runDryVersion(
   totalRuns: number,
   extraParams: Record<string, string> = {},
   programSource?: ProgramSource,
+  taskGoal?: string,
 ): Promise<Record<string, unknown>> {
   // Only testbed_version varies. site_key/task_key stay whatever the compiled
   // program actually is — relabelling a local-demo program as a Grafana one
@@ -1229,6 +1303,7 @@ async function runDryVersion(
     metrics: emitter,
     maxRepairsPerRun: 2,
     ...(programSource ? { programSource } : {}),
+    ...(taskGoal ? { taskGoal } : {}),
   });
 
   // `--param` is honoured here too, with the driver's own bindings winning —

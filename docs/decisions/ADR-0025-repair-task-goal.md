@@ -32,20 +32,34 @@ for a reason that is a design parameter, not the thesis.
 ## Decision
 
 - **`ReplayRunnerOptions.taskGoal`** puts the text on every `RepairContext` as `task_goal`.
-  `serializeRepairContext()` carries it **verbatim and only when set**. It is the one free-prose
+  `serializeRepairContext()` carries it trimmed and only when non-blank. It is the one free-prose
   field in the payload.
 - **The same text as the fresh baseline.** `DEFAULT_TASK_GOAL` moves to
   `experiments/gate-v1/task-goal.ts`, imported by both drivers. `gate:matrix --gate-task-goal`
-  uses it, and `--task-goal <text>` overrides it. It is not on by default, because the matrix's
+  uses it and refuses a program whose `task_key` is not the gate task's. `--task-goal <text>` is
+  the alternative, and passing both is refused. It is not on by default, because the matrix's
   default program is not the gate task.
-- **It must never carry a binding.** `ReplayRunner.run` refuses, before step 0, a goal that
-  contains any bound string value of 4+ characters (`TaskGoalCarriesParamError`). The error names
-  the param, never the value. Shorter values ("5") occur in ordinary prose.
+- **Parity is checked, not assumed.** With `--cost-fresh`, the matrix compares its goal with the
+  `task_goal` the baseline was measured with, and warns loudly on any difference, including one
+  side having none. This works like the existing model-id warning. `matrix-run.json` records which goal
+  was used (`source: gate | custom` and its digest).
+- **It must never carry a binding.** One rule (`paramInTaskGoal`, `src/runner/task-goal.ts`), checked
+  in three places:
+  - `gate:matrix` refuses at startup, before anything boots.
+  - `ReplayRunner.run` refuses before step 0 (`TaskGoalCarriesParamError`).
+  - `serializeRepairContext()` **drops** the goal for any context that carries one, whoever built
+    it.
+
+  The rule matches any bound string **or number** of 4+ characters, case-insensitively. Errors
+  name the param, never the value. Shorter values ("5") occur in ordinary prose. It fails closed
+  on ordinary words too: a placeholder binding that appears in the goal is refused, and the fix is
+  to bind something else.
 - **The prompt** says to use the goal to choose between options, never as a source of element
   names.
-- **Comparability.** Run rows gain `repair_task_goal: true` when a repair ran with one
-  (`metrics.schema.json`). Self-heal rates with and without it are not comparable, for the same
-  reason `repair_context_level` is recorded.
+- **Comparability.** Run rows gain `repair_task_goal_sha256` (the first 12 hex characters, never
+  the text) when a repair ran with a goal (`metrics.schema.json`). Self-heal rates under different
+  goals, or none, are not comparable. That is why the goal is identified rather than merely
+  flagged, for the same reason `repair_context_level` is recorded.
 
 ## Measured (2026-10-22)
 
@@ -77,8 +91,9 @@ choose TestData, but as the only action.
 
 ## Consequences
 
-- Repair and fresh are now equally informed in any run that passes `--gate-task-goal`. Earlier
-  rows are marked by the absence of `repair_task_goal`.
+- Repair and fresh are now equally informed in any run that passes `--gate-task-goal`, and the
+  matrix warns when they are not. Earlier rows are marked by the absence of
+  `repair_task_goal_sha256`.
 - **Step 2 on 10.0.13 still does not pass**, for two separate reasons:
   - The check compiled from 9.5.21 is false there (#224).
   - With qwen3-235b, the proposal is still wrong.
