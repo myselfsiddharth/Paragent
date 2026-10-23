@@ -155,6 +155,13 @@ export interface Args {
   /** `--gate-task-goal` was passed; resolved against the program at startup. */
   gateTaskGoal: boolean;
   /**
+   * Repairs a run may make before it stops (ADR-0027). Default: uncapped
+   * (`Infinity`), bounded only by the run's wall-clock budget, so a run gets
+   * as far as the task goes and its repair cost is the cost of finishing.
+   * The §9 bar is unaffected: `success_with_le_2_repairs` is fixed at 2.
+   */
+  maxRepairsPerRun: number;
+  /**
    * Path to a measured fresh-baseline summary (#39), written by
    * `npm run gate:baseline` as `out/fresh-baseline/baseline.json`. When set,
    * its `mean_cost_fresh` is broadcast onto every **live** run row's
@@ -241,6 +248,17 @@ const VALUED_FLAGS = {
     }
     args.repairProvider = value as RepairProvider;
   },
+  "max-repairs-per-run": (args, value) => {
+    if (value === "none") {
+      args.maxRepairsPerRun = Number.POSITIVE_INFINITY;
+      return;
+    }
+    const n = Number(value);
+    if (!Number.isInteger(n) || n < 0) {
+      throw new Error(`--max-repairs-per-run must be a non-negative integer or "none", got: ${value}`);
+    }
+    args.maxRepairsPerRun = n;
+  },
   "task-goal": (args, value) => {
     args.taskGoal = value;
   },
@@ -266,6 +284,7 @@ export function parseArgs(argv: string[]): Args {
     runs: DEFAULT_RUNS_PER_VERSION,
     poolOnly: false,
     gateTaskGoal: false,
+    maxRepairsPerRun: Number.POSITIVE_INFINITY,
   };
   const valued = new Set(VALUED_FLAG_NAMES.map((name) => `--${name}`));
   for (let i = 0; i < argv.length; i++) {
@@ -362,6 +381,11 @@ function usage(): void {
                      this is a capital cost on one. Refuses (exit 2) if the file
                      is missing, not usable=true, has no program_build_id, or
                      measures zero tokens. Ignored under --dry-run.
+  --max-repairs-per-run <n|none>
+                     Repairs a run may make before it stops (ADR-0027).
+                     Default none: repair until the task finishes or the run's
+                     wall-clock budget runs out. The §9 bar stays "<=2
+                     repairs" whatever this is; it decides how far a run gets.
   --task-goal <text> Tell the repair model what the whole task is for (ADR-0025),
                      so a repair can choose between options, not only find.
                      Sent to the model; refused if it contains a bound value.
@@ -706,6 +730,7 @@ async function walkVersions(
             opts.args.params,
             opts.programSource,
             opts.args.taskGoal,
+            opts.args.maxRepairsPerRun,
           ),
         );
       }
@@ -725,6 +750,7 @@ async function walkVersions(
       preamble: opts.args.preamble,
       extraParams: opts.args.params,
       runs: opts.args.runs,
+      maxRepairsPerRun: opts.args.maxRepairsPerRun,
       ...(opts.programSource ? { programSource: opts.programSource } : {}),
       ...(opts.cacheProgramInvalidated !== undefined
         ? { cacheProgramInvalidated: opts.cacheProgramInvalidated }
@@ -1213,6 +1239,8 @@ async function main(): Promise<void> {
         matrix_target: matrix.target,
         selection: selectionLabel,
         runs_per_version: args.runs,
+        // ADR-0027: how far a run was allowed to go. null = uncapped.
+        repair_cap: Number.isFinite(args.maxRepairsPerRun) ? args.maxRepairsPerRun : null,
         interrupted: stopRequested,
         // Planned vs actual, both. A reader comparing them can see at a glance
         // whether the matrix finished or was cut short, without inferring it
@@ -1291,6 +1319,7 @@ async function runDryVersion(
   extraParams: Record<string, string> = {},
   programSource?: ProgramSource,
   taskGoal?: string,
+  maxRepairsPerRun: number = Number.POSITIVE_INFINITY,
 ): Promise<Record<string, unknown>> {
   // Only testbed_version varies. site_key/task_key stay whatever the compiled
   // program actually is — relabelling a local-demo program as a Grafana one
@@ -1301,7 +1330,7 @@ async function runDryVersion(
     dryRun: true,
     dryRunOutcomes: dryOutcomes,
     metrics: emitter,
-    maxRepairsPerRun: 2,
+    maxRepairsPerRun,
     ...(programSource ? { programSource } : {}),
     ...(taskGoal ? { taskGoal } : {}),
   });

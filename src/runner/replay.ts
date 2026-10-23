@@ -358,6 +358,10 @@ export class ReplayRunner {
         let repaired = false;
         let budgetStoppedRepair = false;
         const failureDetectedAt = Date.now();
+        // ADR-0027: every sequence already tried on this step. With the cap
+        // lifted, a model at temperature 0 that re-proposes a failed repair
+        // would spend the run's whole time budget learning nothing.
+        const triedProposals = new Set<string>();
 
         while (repairCount < this.maxRepairsPerRun) {
           // Repair is where the unbounded latency lives once #27 wires a real
@@ -469,6 +473,26 @@ export class ReplayRunner {
 
           const currentAction = proposal.corrected_action;
           const proposedPre = proposal.pre_actions ?? [];
+          const proposalKey = JSON.stringify([proposedPre, currentAction]);
+          if (triedProposals.has(proposalKey)) {
+            // Paid for (the cost is already in costRepair) and counted, but
+            // not executed: the same actions on the same page cannot pass a
+            // check they just failed. Not a cap; the step simply has nothing
+            // new to try.
+            final = {
+              step_index: step.step_index,
+              outcome: "REPAIR_EXHAUSTED",
+              replay_valid: false,
+              mode: "repair",
+              cost: proposeCost,
+              repair_attempt: attempt,
+              assertion_strength: step.assertion.strength,
+              first_pass_outcome: first.outcome,
+              error_message: "repair proposed a sequence it already tried on this step",
+            };
+            break;
+          }
+          triedProposals.add(proposalKey);
           // ADR-0024: recorded pre-actions that ran before the failure stay.
           // They already acted on this page, so the retry does not run them
           // again, and the repaired step keeps them in front of the repair's.
@@ -882,6 +906,9 @@ export class ReplayRunner {
       ...(result.repair_count > 0
         ? { repair_context_level: this.repairContextLevel }
         : {}),
+      // ADR-0027: the per-run repair cap in force, null when uncapped (the
+      // gate's setting). Absent on rows written before it, which ran at 2.
+      repair_cap: Number.isFinite(this.maxRepairsPerRun) ? this.maxRepairsPerRun : null,
       // ADR-0025: whether the repair model was told the task's goal. Same
       // reason as the context level: two self-heal rates are not comparable
       // across it, and only meaningful when a repair actually ran.

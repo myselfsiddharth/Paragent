@@ -148,6 +148,12 @@ export interface RunMetric {
    */
   repair_task_goal_sha256?: string;
   /**
+   * The per-run repair cap in force (ADR-0027); null when uncapped and only
+   * the time budget bounds the run. Absent on rows written before it (cap 2).
+   * The §9 bar is unaffected: `success_with_le_2_repairs` is fixed at 2.
+   */
+  repair_cap?: number | null;
+  /**
    * Where this run's program came from (ADR-0014, #118). Absent on runs that
    * predate the field — never assumed to be `file`.
    */

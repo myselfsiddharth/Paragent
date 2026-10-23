@@ -216,8 +216,13 @@ model and effort that produced it is not reproducible.
    is load-bearing by disabling it and watching the corresponding attack go undetected (a silent
    `REPAIRED_PASS`, once even reporting `assertion_strength: "weak"`) before restoring it.
 2. **No invented metrics.** Stub repair and unwired fresh baselines emit **zeros**; aggregates report `no_data` when denominators are empty.
-3. **`maxRepairsPerRun` default 2, and the budget is per run, not per step.** `repairCount` is one
-   counter for the whole `run()` call, not reset between steps — a step that enters repair with
+3. **`maxRepairsPerRun` default 2 in `ReplayRunner`; the gate matrix runs uncapped (ADR-0027).**
+   `gate:matrix` passes `Infinity` unless `--max-repairs-per-run` says otherwise, so a run repairs
+   until the task finishes or `wall_clock_budget_ms` runs out, and a step stops early only when
+   the model re-proposes a sequence it already tried there. Run rows record `repair_cap` (null =
+   uncapped). The rest of this invariant holds for any finite cap: the budget is per run, not per
+   step. `repairCount` is one counter for the whole `run()` call, not reset between steps — a step
+   that enters repair with
    the budget already spent gets zero attempts of its own, immediately `REPAIR_EXHAUSTED`. Aligns
    with `success_with_le_2_repairs` on run metrics, which is hard-coded to a threshold of 2
    regardless of what `maxRepairsPerRun` was configured to, so raising the cap to study a harder
