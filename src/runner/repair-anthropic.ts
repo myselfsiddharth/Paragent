@@ -162,6 +162,8 @@ export const REPAIR_SYSTEM_PROMPT = [
   "You are given the failed action, the assertion's type and strength, and the",
   "visible interactive elements on the page as role/name pairs.",
   "Return a corrected_action that targets an element from that list.",
+  "Elements marked in_dialog belong to a dialog open in front of the page; while",
+  "one is open, it intercepts the page behind it.",
   "Return corrected_action: null if no element plausibly matches the step's intent.",
   "You may not change the assertion. Do not guess at page content you were not given.",
 ].join(" ");

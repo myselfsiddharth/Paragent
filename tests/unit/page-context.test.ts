@@ -18,6 +18,7 @@ import type { Browser, Page } from "playwright";
 import { launchTestBrowser } from "../helpers/browser.js";
 import { capturePageState } from "../../src/runner/page-state.js";
 import {
+  CONTEXT_ATTRIBUTE_ALLOWLIST,
   CONTEXT_LEVELS,
   DEFAULT_CONTEXT_LEVEL,
   contextExpression,
@@ -160,6 +161,25 @@ describe("contextExpression", () => {
     // #74's invariant, in the new capture site.
     for (const level of CONTEXT_LEVELS) {
       expect(contextExpression(level)).toContain("paragentIsVisible");
+    }
+  });
+
+  it("reads only allowlisted attributes, by call, by selector, or by property", () => {
+    // CONTEXT_ATTRIBUTE_ALLOWLIST used to be documentation only. #212 added
+    // attributes to it, and this test is what makes the list hold. Three
+    // routes read an attribute: getAttribute/hasAttribute, an attribute
+    // selector (`a[href]`, `label[for=...]`), and the `id` property.
+    for (const level of CONTEXT_LEVELS) {
+      const src = contextExpression(level);
+      const read = [
+        ...[...src.matchAll(/(?:get|has)Attribute\("([^"]+)"\)/g)].map((m) => m[1]),
+        ...[...src.matchAll(/\[([a-z][a-z-]*)(?=[=\]])/g)].map((m) => m[1]),
+        ...(/\.id\b/.test(src) ? ["id"] : []),
+      ];
+      expect(read).toContain("aria-modal");
+      expect(read).toContain("href");
+      expect(read).toContain("for");
+      for (const attr of read) expect(CONTEXT_ATTRIBUTE_ALLOWLIST).toContain(attr);
     }
   });
 
@@ -306,5 +326,210 @@ describe("truthful roles and container-named controls (ADR-0021)", () => {
     const spin = await resolveWithFallback(page, [{ strategy: "role_name", role: "spinbutton", name: "Series count" }]);
     await spin.fill("5");
     expect(await spin.inputValue()).toBe("5");
+  });
+});
+
+/**
+ * #212: on Grafana 10.0.13 the "Select data source" modal is rendered at the end
+ * of the DOM. The editor's option panes filled the 120-element cap in document
+ * order, so none of the modal's controls reached the repair model.
+ */
+describe("an open dialog is captured first (#212)", () => {
+  let browser: Browser;
+  let page: Page;
+
+  // More background controls than the cap, so a document-order capture never
+  // reaches the dialog. That was the live failure.
+  const background = Array.from(
+    { length: 150 },
+    (_, i) => `<button aria-label="Option pane ${i}">x</button>`,
+  ).join("");
+  const dialogBody = `
+    <h2>Select data source</h2>
+    <p>${BODY_TEXT}</p>
+    <input aria-label="Search data sources" value="${TYPED_VALUE}">
+    <button aria-label="Data source TestData">TestData</button>
+    <button aria-label="Close">x</button>`;
+
+  const html = (dialogAttrs: string) => `<!doctype html><html><body>
+    <main><button aria-label="Close">bg close</button>${background}</main>
+    <div ${dialogAttrs}>${dialogBody}</div>
+  </body></html>`;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("a modal's controls come first, flagged, and the inert background is dropped", async () => {
+    await page.setContent(html(`role="dialog" aria-modal="true" aria-label="Select data source"`));
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements).toEqual([
+      { role: "textbox", name: "Search data sources", in_dialog: true },
+      { role: "button", name: "Data source TestData", in_dialog: true },
+      { role: "button", name: "Close", in_dialog: true },
+    ]);
+  });
+
+  it("a non-modal dialog's controls come first and the background is demoted, not dropped", async () => {
+    await page.setContent(html(`role="dialog" aria-label="Select data source"`));
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements.slice(0, 3).map((e) => e.name)).toEqual([
+      "Search data sources",
+      "Data source TestData",
+      "Close",
+    ]);
+    expect(elements.slice(0, 3).every((e) => e.in_dialog === true)).toBe(true);
+    // The background's own "Close" is deduplicated against the dialog's, and
+    // what remains of the background carries no flag.
+    expect(elements[3]).toEqual({ role: "button", name: "Option pane 0" });
+    expect(elements).toHaveLength(120);
+  });
+
+  it("a <dialog> opened with showModal() is treated as modal without aria-modal", async () => {
+    await page.setContent(`<!doctype html><html><body>
+      <main>${background}</main>
+      <dialog id="d">${dialogBody}</dialog>
+      <script>document.getElementById("d").showModal()</script>
+    </body></html>`);
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements.map((e) => e.name)).toEqual([
+      "Search data sources",
+      "Data source TestData",
+      "Close",
+    ]);
+  });
+
+  it("a hidden dialog changes nothing", async () => {
+    await page.setContent(html(`role="dialog" aria-modal="true" style="display:none"`));
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements[0]).toEqual({ role: "button", name: "Close" });
+    expect(elements.some((e) => e.in_dialog)).toBe(false);
+  });
+
+  it("still never carries a value or prose from the dialog", async () => {
+    await page.setContent(html(`role="dialog" aria-modal="true"`));
+    for (const level of CONTEXT_LEVELS) {
+      const serialized = JSON.stringify(await capturePageState(page, level));
+      expect(serialized).not.toContain(TYPED_VALUE);
+      expect(serialized).not.toContain(BODY_TEXT);
+    }
+  });
+});
+
+/**
+ * Found by the first live sequence-repair probe on Grafana 10.0.13 (#213): the
+ * data-source card was captured as "Paragent TestData defaultTestData" (raw
+ * textContent), its accessible name is "Paragent TestData Tags TestData", and
+ * the model's correct proposal matched nothing. A name the model is shown must
+ * be a name a locator can match.
+ */
+describe("content-derived names are accessible names (#212)", () => {
+  let browser: Browser;
+  let page: Page;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+    await page.setContent(`<!doctype html><html><body><main>
+      <h2><button id="card"><div>Paragent TestData</div><ul aria-label="Tags"><li>default</li></ul><div>TestData</div></button></h2>
+      <button id="inline">Save <b>dash</b>board</button>
+      <button id="hidden">Close<span aria-hidden="true">×</span><span style="display:none">${BODY_TEXT}</span></button>
+    </main></body></html>`);
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("uses a child's aria-label for its content and spaces block children", async () => {
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements).toContainEqual({ role: "button", name: "Paragent TestData Tags TestData" });
+  });
+
+  it("does not space inline children, and skips aria-hidden and undisplayed ones", async () => {
+    const names = ((await capturePageState(page, "interactive")).elements ?? []).map((e) => e.name);
+    expect(names).toContain("Save dashboard");
+    expect(names).toContain("Close");
+    expect(JSON.stringify(names)).not.toContain(BODY_TEXT);
+  });
+
+  it("every captured name resolves back to exactly its element", async () => {
+    const { resolveWithFallback } = await import("../../src/runner/locators.js");
+    const { elements = [] } = await capturePageState(page, "interactive");
+    for (const [name, id] of [
+      ["Paragent TestData Tags TestData", "card"],
+      ["Save dashboard", "inline"],
+      ["Close", "hidden"],
+    ] as const) {
+      expect(elements.map((e) => e.name)).toContain(name);
+      const loc = await resolveWithFallback(page, [{ strategy: "role_name", role: "button", name }]);
+      expect(await loc.getAttribute("id")).toBe(id);
+    }
+  });
+});
+
+/** Review of PR #222: dialogs the first version mis-identified, and name gaps. */
+describe("which dialog is open, and what a modal keeps (#212 review)", () => {
+  let browser: Browser;
+  let page: Page;
+  const bg = `<main><button aria-label="Background action">x</button></main>`;
+
+  beforeAll(async () => {
+    browser = await launchTestBrowser();
+    page = await browser.newPage();
+  }, 60_000);
+
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  it("keeps a menu the modal opened, portaled to the end of the body", async () => {
+    await page.setContent(`${bg}
+      <div role="dialog" aria-modal="true"><button aria-label="Open menu">v</button></div>
+      <div role="listbox"><div role="option" aria-label="TestData">TestData</div></div>`);
+    const names = ((await capturePageState(page, "interactive")).elements ?? []).map((e) => e.name);
+    expect(names).toEqual(["Open menu", "TestData"]);
+  });
+
+  it("ignores a closed dialog left in the DOM at opacity 0 or under aria-hidden", async () => {
+    for (const closed of [
+      `<div role="dialog" aria-modal="true" style="opacity:0"><button aria-label="Ghost">g</button></div>`,
+      `<div aria-hidden="true"><div role="dialog" aria-modal="true"><button aria-label="Ghost">g</button></div></div>`,
+    ]) {
+      await page.setContent(bg + closed);
+      const { elements = [] } = await capturePageState(page, "interactive");
+      expect(elements.some((e) => e.in_dialog)).toBe(false);
+      expect(elements.map((e) => e.name)).toContain("Background action");
+    }
+  });
+
+  it("a modal outranks a non-modal popover rendered after it", async () => {
+    await page.setContent(`${bg}
+      <div role="dialog" aria-modal="true"><button aria-label="Modal choice">m</button></div>
+      <div role="dialog"><button aria-label="Popover item">p</button></div>`);
+    const { elements = [] } = await capturePageState(page, "interactive");
+    expect(elements[0]).toEqual({ role: "button", name: "Modal choice", in_dialog: true });
+    expect(elements.find((e) => e.name === "Popover item")?.in_dialog).toBeUndefined();
+    expect(elements.map((e) => e.name)).not.toContain("Background action");
+  });
+
+  it("names: an aria-labelledby target's own aria-label wins, a blank aria-label is ignored", async () => {
+    await page.setContent(`<main>
+      <span id="x" aria-label="Foo">Bar</span><button id="lb" aria-labelledby="x">?</button>
+      <button id="blank" aria-label="  ">Save</button>
+      <button id="child"><span aria-label=" ">Visible</span></button>
+    </main>`);
+    const { resolveWithFallback } = await import("../../src/runner/locators.js");
+    const { elements = [] } = await capturePageState(page, "interactive");
+    for (const [name, id] of [["Foo", "lb"], ["Save", "blank"], ["Visible", "child"]] as const) {
+      expect(elements.map((e) => e.name)).toContain(name);
+      const loc = await resolveWithFallback(page, [{ strategy: "role_name", role: "button", name }]);
+      expect(await loc.getAttribute("id")).toBe(id);
+    }
   });
 });
