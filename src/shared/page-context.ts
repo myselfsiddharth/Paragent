@@ -47,6 +47,13 @@
 
 import { VISIBILITY_PREDICATE_JS } from "./landmarks.js";
 
+/**
+ * How many elements a repair context carries. A payload budget for the model,
+ * not a property of the page: `visibleControlKeys` (src/shared/controls.ts)
+ * lifts it, because a count of what appeared is wrong if the cap hid it.
+ */
+export const CONTEXT_ELEMENT_LIMIT = 120;
+
 /** Context levels, ordered by increasing capability and increasing exposure. */
 export const CONTEXT_LEVELS = ["landmarks", "interactive", "tree"] as const;
 
@@ -134,7 +141,11 @@ export const CONTEXT_ATTRIBUTE_ALLOWLIST: readonly string[] = [
  * The `level` argument is interpolated by the caller, not read from scope: the
  * body is serialized into a page that has no access to this module.
  */
-export function contextExpression(level: ContextLevel): string {
+export function contextExpression(
+  level: ContextLevel,
+  limit: number = CONTEXT_ELEMENT_LIMIT,
+  dialogFirst: boolean = true,
+): string {
   // Interactive roles a repair could plausibly target. Deliberately not "every
   // element": a corrected action clicks, fills or selects something.
   const interactiveSelector = [
@@ -264,7 +275,8 @@ export function contextExpression(level: ContextLevel): string {
     const dialogs = Array.from(document.querySelectorAll(${JSON.stringify(dialogSelector)}))
       .filter(paragentDialogOpen);
     const modals = dialogs.filter(paragentIsModal);
-    const dialog = modals.length > 0 ? modals[modals.length - 1]
+    const dialog = !${dialogFirst ? "true" : "false"} ? null
+      : modals.length > 0 ? modals[modals.length - 1]
       : dialogs.length > 0 ? dialogs[dialogs.length - 1] : null;
     let insideSet = null;
     if (dialog) {
@@ -366,7 +378,7 @@ export function contextExpression(level: ContextLevel): string {
       if (state.length > 0) entry.state = state;
       if (insideSet && insideSet.has(el)) entry.in_dialog = true;
       out.push(entry);
-      if (out.length >= 120) break;
+      if (out.length >= ${Math.max(1, Math.floor(limit))}) break;
     }
     return out;
   })()`;

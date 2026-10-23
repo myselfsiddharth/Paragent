@@ -134,6 +134,33 @@ export interface CompileOptions {
   assertionTimeoutMs?: number;
 }
 
+/**
+ * Replace a post_state URL the very next step's pre_state contradicts on the
+ * same path (#224 review, ADR-0026).
+ *
+ * Nothing acts between one step's post_state and the next step's pre_state,
+ * so when the two share a path and differ, the first was taken mid-redirect:
+ * Grafana's Save routes to `/d/{uid}/{slug}` and only then adds `?orgId=1`.
+ * Kept as recorded, that transient taught ADR-0022's state-bearing rule that
+ * `orgId` must be absent there, and every replay on the recording version
+ * failed. The recorder now waits for the URL to stop moving; this removes the
+ * class at the compiler, whatever the recorder's timing. A different path is a
+ * real navigation and is left alone. Returns a copy; the input is untouched.
+ */
+export function settleTransientUrls(trajectory: Trajectory): Trajectory {
+  const steps = [...trajectory.steps].sort((a, b) => a.step_index - b.step_index);
+  const out = steps.map((s) => ({ ...s, post_state: { ...s.post_state } }));
+  const path = (u: string) => u.split(/[?#]/)[0];
+  for (let i = 0; i + 1 < out.length; i++) {
+    const post = out[i]!.post_state.url_template;
+    const nextPre = out[i + 1]!.pre_state.url_template;
+    if (post && nextPre && post !== nextPre && path(post) === path(nextPre)) {
+      out[i]!.post_state.url_template = nextPre;
+    }
+  }
+  return { ...trajectory, steps: out };
+}
+
 export function compileTrajectory(
   trajectory: Trajectory,
   options: CompileOptions = {},
@@ -146,6 +173,9 @@ export function compileTrajectory(
   if (!trajectory.steps?.length) {
     throw new Error("Trajectory has no steps to compile");
   }
+
+  // #224 review: see settleTransientUrls.
+  trajectory = settleTransientUrls(trajectory);
 
   const compiledAt = options.compiledAt ?? new Date().toISOString();
   const assertionOptions: SynthesizeAssertionOptions =

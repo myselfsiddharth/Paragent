@@ -428,6 +428,53 @@ describe("click assertion target", () => {
     // own field is not a pattern we have observed, so do not invent a rule.
     expect(assertion.expected?.visible).not.toBe(false);
   });
+
+  // ADR-0026 (#224)
+  describe("a click that revealed controls asserts that, not that it stayed visible", () => {
+    const compile = (over: Record<string, unknown>) =>
+      compileTrajectory(
+        wrap({ ...clickStep("http://{host}:{port}/app", "http://{host}:{port}/app"), ...over }),
+        { compiledAt: "2026-07-25T00:00:00.000Z" },
+      ).rows[0]!.assertion;
+
+    it("emits a weak controls-appeared with no target and no page text", () => {
+      const assertion = compile({ post_action_target_visible: true, controls_appeared: 7 });
+      expect(assertion.type).toBe("controls-appeared");
+      expect(assertion.strength).toBe("weak");
+      expect(assertion.expected).toEqual({ count: 1 });
+      expect(assertion.target).toBeUndefined();
+    });
+
+    it("keeps the old check when the recording saw nothing appear, or could not tell", () => {
+      for (const over of [{ controls_appeared: 0 }, {}]) {
+        const assertion = compile({ post_action_target_visible: true, ...over });
+        expect(assertion.type).toBe("element-visible");
+        expect(assertion.expected?.visible).toBe(true);
+      }
+    });
+
+    it("leaves the disappearing-control check (ADR-0007) and fills alone", () => {
+      expect(compile({ post_action_target_visible: false, controls_appeared: 4 }).expected?.visible).toBe(false);
+      const fill = compile({
+        action: { type: "fill", param_refs: ["q"] },
+        post_action_target_visible: true,
+        controls_appeared: 4,
+      });
+      expect(fill.type).toBe("element-visible");
+    });
+
+    it("prefers the destination when the click navigated", () => {
+      const assertion = compileTrajectory(
+        wrap({
+          ...clickStep("http://{host}:{port}/app", "http://{host}:{port}/app#home"),
+          post_action_target_visible: true,
+          controls_appeared: 4,
+        }),
+        { compiledAt: "2026-07-25T00:00:00.000Z" },
+      ).rows[0]!.assertion;
+      expect(assertion.type).toBe("url-matches");
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -606,5 +653,44 @@ describe("compileTrajectory example", () => {
     const validation = await validateCompiledBundle(bundle);
     expect(validation.errors).toEqual([]);
     expect(validation.ok).toBe(true);
+  });
+});
+
+// #230 review (ADR-0026): a post_state URL the next step's pre_state
+// contradicts on the same path was taken mid-redirect.
+describe("settleTransientUrls", () => {
+  it("replaces a same-path transient with the settled URL, and leaves navigations alone", async () => {
+    const { settleTransientUrls } = await import("../../src/compiler/compile.js");
+    const fp = (url: string) => ({ url_template: url, title_template: "", dom_digest: "x", visible_landmarks: [], network_idle: true });
+    const step = (i: number, pre: string, post: string) => ({
+      step_index: i,
+      intent: "s",
+      action: { type: "click" as const },
+      locator_candidates: [],
+      pre_state: fp(pre),
+      post_state: fp(post),
+      timing_ms: { started_offset_ms: 0, duration_ms: 1 },
+    });
+    const traj = {
+      schema_version: "1.0.0",
+      trajectory_id: "t",
+      site_key: "s",
+      task_key: "k",
+      recorded_at: "2026-10-22T00:00:00.000Z",
+      base_url_template: "http://{host}:{port}",
+      provenance: { recorder: "x", agent_model: "human", testbed_version: "v" },
+      parameters: {},
+      steps: [
+        step(0, "http://{host}:{port}/dashboard/new?orgId=1", "http://{host}:{port}/d/{uid}/{slug}"),
+        step(1, "http://{host}:{port}/d/{uid}/{slug}?orgId=1", "http://{host}:{port}/dashboards"),
+        step(2, "http://{host}:{port}/somewhere/else", "http://{host}:{port}/somewhere/else"),
+      ],
+    } as unknown as Parameters<typeof settleTransientUrls>[0];
+    const out = settleTransientUrls(traj);
+    expect(out.steps[0]!.post_state.url_template).toBe("http://{host}:{port}/d/{uid}/{slug}?orgId=1");
+    // A different path is a real navigation, not a transient.
+    expect(out.steps[1]!.post_state.url_template).toBe("http://{host}:{port}/dashboards");
+    // The input is untouched.
+    expect(traj.steps[0]!.post_state.url_template).toBe("http://{host}:{port}/d/{uid}/{slug}");
   });
 });

@@ -148,6 +148,14 @@ describe("recorder package", () => {
       );
       expect(loginClick).toBeDefined();
       expect(loginClick!.post_state.visible_landmarks).not.toContain("form");
+      // ADR-0026: the login click revealed the app's controls, recorded as a
+      // count, never the names. Only click-like steps carry one: nothing else
+      // is read by the compiler, so nothing else pays for two captures.
+      expect(loginClick!.controls_appeared).toBeGreaterThan(0);
+      for (const s of traj.steps) {
+        const clickLike = ["click", "check", "uncheck", "press"].includes(s.action.type);
+        expect(typeof s.controls_appeared).toBe(clickLike ? "number" : "undefined");
+      }
       const fillStep = traj.steps.find((s) => s.action.type === "fill");
       expect(fillStep?.locator_candidates.length).toBeGreaterThanOrEqual(2);
       expect(fillStep?.locator_candidates[0]?.strategy).toBe("role_name");
@@ -157,6 +165,41 @@ describe("recorder package", () => {
       expect(waitStep?.action.wait_ms).toBe(50);
 
       expect(validate(traj)).toBe(true);
+    } finally {
+      await browser.close();
+    }
+  }, 60_000);
+});
+
+/**
+ * #224: Grafana's Save routes to /d/{uid}/{slug}, then rewrites it to add
+ * ?orgId=1. Returning on the first URL change recorded the intermediate URL.
+ */
+describe("settleUrl waits for the URL to stop moving", () => {
+  it("records the final URL of a two-hop client-side route", async () => {
+    const { launchTestBrowser } = await import("../helpers/browser.js");
+    const { settleUrl } = await import("../../src/recorder/session.js");
+    const browser = await launchTestBrowser();
+    try {
+      const page = await browser.newPage();
+      await page.route("http://paragent.test/**", (route) =>
+        route.fulfill({ contentType: "text/html", body: "<main>app</main>" }),
+      );
+      await page.goto("http://paragent.test/dashboard/new?orgId=1");
+      const before = page.url();
+      // A string, not a callback: no DOM types in this project, and the
+      // keepNames trap (PR #73) for serialized functions.
+      await page.evaluate(`
+        setTimeout(() => history.pushState({}, "", "/d/abc/gate"), 50);
+        setTimeout(() => history.replaceState({}, "", "/d/abc/gate?orgId=1"), 200);
+      `);
+      await settleUrl(page, before);
+      expect(page.url()).toBe("http://paragent.test/d/abc/gate?orgId=1");
+
+      // A URL that never moves still returns, after the first budget.
+      const started = Date.now();
+      await settleUrl(page, page.url());
+      expect(Date.now() - started).toBeLessThan(2_000);
     } finally {
       await browser.close();
     }

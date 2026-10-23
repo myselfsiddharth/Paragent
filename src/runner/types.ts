@@ -34,6 +34,7 @@ export type ActionType =
 
 export type AssertionType =
   | "element-visible"
+  | "controls-appeared"
   | "text-matches"
   | "url-matches"
   | "count-equals"

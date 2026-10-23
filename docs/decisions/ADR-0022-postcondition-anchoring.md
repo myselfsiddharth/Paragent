@@ -97,6 +97,7 @@ No product-specific parameter list: the rule needs nothing but the trajectory. U
 
 - **Whether a `locator_ref` check is strong enough for steps whose real purpose is downstream state**
   (e.g. "the picker opened"). It is exactly as strong as the copied-locator check it replaces, no
-  stronger. #210 (`value-equals`) is the path to checks that prove an outcome.
+  stronger. #210 (`value-equals`) is the path to checks that prove an outcome. For click steps
+  this showed up live on 10.0.13 and is answered by [ADR-0026](ADR-0026-controls-appeared.md).
 - **The state-bearing rule depends on the recording having visited the distinguishing states.** A
   key whose alternate state was never recorded is treated as view state.

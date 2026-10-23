@@ -20,6 +20,7 @@ import type { ProgramSource } from "../metrics/types.js";
 import { executeAction, NETWORK_IDLE_WAIT_MS } from "./actions.js";
 import { evaluateAssertion } from "./assertions.js";
 import { capturePageState, emptyPageState } from "./page-state.js";
+import { settledControlKeys } from "../shared/controls.js";
 import {
   DEFAULT_CONTEXT_LEVEL,
   type ContextLevel,
@@ -704,6 +705,7 @@ export class ReplayRunner {
 
     let preCompleted = 0;
     const { result, wall_clock_ms } = await measureWallClock(async () => {
+      let controlsBefore: Set<string> | undefined;
       // A pre-action that fails fails the step, with its own outcome: the
       // repair loop then sees exactly which part of the sequence broke, and
       // `preCompleted` says how much of it already acted on the page.
@@ -720,6 +722,16 @@ export class ReplayRunner {
           };
         }
         preCompleted += 1;
+      }
+      // ADR-0026: after the pre-actions and right before the step's own
+      // action (#230 review), so the count is of what THAT action revealed.
+      // Before the pre-actions, closing a dialog would count as the page
+      // "appearing" and a no-op own action would pass. Settled, so controls
+      // still rendering from the previous step are not credited to this one.
+      // A failed capture leaves it undefined, and the assertion then fails
+      // saying so rather than passing blind.
+      if (step.assertion.type === "controls-appeared") {
+        controlsBefore = await settledControlKeys(this.page!).catch(() => undefined);
       }
       const actionResult = await executeAction(this.page!, action, params, {
         networkIdleWaitMs: this.networkIdleWaitMs,
@@ -738,7 +750,10 @@ export class ReplayRunner {
         this.page!,
         step.assertion,
         params,
-        actionResult.target ? { actionTarget: actionResult.target } : {},
+        {
+          ...(actionResult.target ? { actionTarget: actionResult.target } : {}),
+          ...(controlsBefore ? { controlsBefore } : {}),
+        },
       );
       return {
         outcome: assertionResult.outcome,

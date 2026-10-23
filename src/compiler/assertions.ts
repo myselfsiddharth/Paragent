@@ -130,6 +130,9 @@ interface SynthesisContext {
   locatorChain: CompiledLocator[];
 }
 
+/** Actions whose purpose is a page change, not a value: ADR-0007's and ADR-0026's branches. */
+const CLICK_LIKE_ACTIONS: readonly string[] = ["click", "check", "uncheck", "press"];
+
 /** Synthesize one post-condition; expected values are templates with typed holes. */
 export function synthesizeAssertion(
   ctx: SynthesisContext,
@@ -247,7 +250,7 @@ export function synthesizeAssertion(
     step.post_action_target_visible === false &&
     primary !== undefined &&
     !clickChangedUrl &&
-    ["click", "check", "uncheck", "press"].includes(step.action.type)
+    CLICK_LIKE_ACTIONS.includes(step.action.type)
   ) {
     return {
       schema_version: SCHEMA_VERSION,
@@ -260,6 +263,40 @@ export function synthesizeAssertion(
       failure_classification: "assertion_failed",
       notes:
         "Recorder observed the acted-on control was no longer visible after the action (ADR-0007 post_action_target_visible=false). Asserts only that: the control is gone. Proves the step was not a no-op; proves nothing about downstream state.",
+    };
+  }
+
+  /**
+   * ADR-0026 (#224): a click whose control stays on screen and that revealed
+   * new controls when recorded. The old check here, "the clicked control is
+   * still visible", describes the recording version's layout, not the step's
+   * purpose: on Grafana 10.0.13 the visualization toggle disappears once the
+   * picker opens, so the check was false while the step did exactly its job,
+   * and frozen under repair, so nothing could pass it.
+   *
+   * What the step is for is to reveal something, and the recording observed
+   * that it did. So assert that: at least one control appears. It is a count,
+   * so a renamed control cannot break it and no page text enters the row.
+   * Weak, honestly: a wrong menu opening passes too. What it rules out is the
+   * click doing nothing, which the old check could not.
+   */
+  if (
+    wantsElement &&
+    !clickChangedUrl &&
+    step.post_action_target_visible === true &&
+    (step.controls_appeared ?? 0) > 0 &&
+    CLICK_LIKE_ACTIONS.includes(step.action.type)
+  ) {
+    return {
+      schema_version: SCHEMA_VERSION,
+      assertion_id: assertionId,
+      type: "controls-appeared",
+      strength: "weak",
+      expected: { count: 1 },
+      timeout_ms,
+      failure_classification: "assertion_failed",
+      notes:
+        `Recorder observed ${step.controls_appeared} new control(s) after the action (ADR-0026). Asserts at least one appears: the step revealed something. Weak: a wrong surface opening also passes; rules out a no-op.`,
     };
   }
 
