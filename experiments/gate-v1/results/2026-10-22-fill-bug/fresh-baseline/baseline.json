@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "fresh_baseline_run",
+  "generated_at": "2026-10-23T05:19:00.758Z",
+  "dry_run": false,
+  "usable": true,
+  "model_id": "glm-5-3",
+  "provider": "voyager",
+  "effort": "n/a (voyager)",
+  "testbed_version": "9.5.21",
+  "site_key": "grafana-oss@9.5.21",
+  "task_key": "create-stat-dashboard-from-testdata",
+  "task_goal": "Create a new dashboard. Add a panel to it using the TestData data source, and configure the panel as a Stat visualization with a query alias and a series count of your choosing. Give the panel a title. Apply the panel back to the dashboard, then save the dashboard under a title of your choosing. Confirm the saved dashboard appears in the dashboards list. The task is done once the dashboard is saved and visible in that list.",
+  "runs_attempted": 8,
+  "measured_runs": 8,
+  "successes": 1,
+  "runs": [
+    {
+      "run_id": "0b5e63f4-8f1f-4903-9800-d9785056c183",
+      "task_success": true,
+      "tokens_in": 345142,
+      "tokens_out": 3602,
+      "wall_clock_ms": 200883,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "done on turn 30 (provider=voyager temperature=0 cached_prompt_tokens=277248)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "6855933f-38fe-46c3-9057-469d0cc10de4",
+      "task_success": false,
+      "tokens_in": 385225,
+      "tokens_out": 3768,
+      "wall_clock_ms": 198251,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=301312)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "09c72278-2301-4036-8b8d-70dfaa3c4931",
+      "task_success": false,
+      "tokens_in": 340423,
+      "tokens_out": 2993,
+      "wall_clock_ms": 175774,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=294528)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "8f87ef90-4eb9-4645-b11c-4922e7ddfabb",
+      "task_success": false,
+      "tokens_in": 388672,
+      "tokens_out": 4142,
+      "wall_clock_ms": 219473,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=341504)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "49814809-e116-42a8-af3e-e919dfce0839",
+      "task_success": false,
+      "tokens_in": 340791,
+      "tokens_out": 2875,
+      "wall_clock_ms": 109878,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=299008)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "82fe8625-41f6-49a4-b07d-59e414b980aa",
+      "task_success": false,
+      "tokens_in": 359136,
+      "tokens_out": 2813,
+      "wall_clock_ms": 115660,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=328960)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "ad7da786-a8d5-480a-8791-05b90887973c",
+      "task_success": false,
+      "tokens_in": 387074,
+      "tokens_out": 4725,
+      "wall_clock_ms": 236164,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=300032)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "3944cb19-60a0-4319-8df8-581d88f0599d",
+      "task_success": false,
+      "tokens_in": 299563,
+      "tokens_out": 3200,
+      "wall_clock_ms": 203579,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=233984)",
+      "unmeasured": false
+    }
+  ],
+  "mean_cost_fresh": {
+    "tokens_in": 355753,
+    "tokens_out": 3515,
+    "wall_clock_ms": 182458,
+    "model_id": "glm-5-3"
+  },
+  "spread": {
+    "tokens_in": {
+      "min": 299563,
+      "max": 388672
+    },
+    "tokens_out": {
+      "min": 2813,
+      "max": 4725
+    },
+    "wall_clock_ms": {
+      "min": 109878,
+      "max": 236164
+    }
+  }
+}

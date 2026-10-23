@@ -1,0 +1,2012 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "gate_matrix_run",
+  "generated_at": "2026-10-23T06:02:59.490Z",
+  "mode": "live",
+  "dry_run": false,
+  "matrix_source": "scripts/testbed/matrix.json",
+  "matrix_target": "grafana-oss",
+  "selection": "all",
+  "runs_per_version": 6,
+  "repair_cap": null,
+  "interrupted": false,
+  "runs_planned": 48,
+  "runs_completed": 48,
+  "section9_floor": {
+    "min_runs": 42,
+    "min_step_executions": 400,
+    "meets_floor": false,
+    "runs_needed_per_version": 6
+  },
+  "versions_in_matrix": 8,
+  "versions_walked": [
+    "9.5.21",
+    "10.0.13",
+    "10.4.19",
+    "11.0.0",
+    "11.5.2",
+    "12.0.0",
+    "12.2.1",
+    "13.0.3"
+  ],
+  "versions_skipped": [],
+  "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+  "program_path": "artifacts/compiled/traj-gate-live-create-stat-dashboard-from-testdata-9.5.21-r3.bundle.json",
+  "program_source": "file",
+  "state_baseline_version": "9.5.21",
+  "cost_fresh_source": "experiments/gate-v1/out/fresh-baseline/baseline.json",
+  "cost_fresh": {
+    "tokens_in": 355753,
+    "tokens_out": 3515,
+    "wall_clock_ms": 182458,
+    "model_id": "glm-5-3"
+  },
+  "repair_task_goal": {
+    "source": "gate",
+    "sha256": "b51382e502d7"
+  },
+  "runs": [
+    {
+      "version": "9.5.21",
+      "run_id": "8f841374-a53a-47e6-bde5-e5e926e56357",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2230
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "6061f161-d7c8-467c-9cee-869a57ed7669",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2228
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "48ed51dc-e383-435c-b427-a1f695e1fcf8",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2213
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "43c1d4f7-02db-44c2-aeb0-3dbd64d270ab",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2210
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "f6ad9c51-e3da-4af6-9aba-9a6da7325c27",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2252
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "577ecc0a-0686-4de7-9a60-cc48e63f85af",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2190
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "98b7daee-6f98-4ac0-82a9-3e8137169348",
+      "task_success": false,
+      "repair_count": 4,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 120285
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "ccaab3f4-f4f9-4702-a997-efbd6789ff9c",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 79258
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "fb62145e-ec37-4ee7-b67e-95f6cf04cc3b",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 91525
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "802f612c-3ecb-4851-a026-1f3c27db959f",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 84180
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "6d98128c-2542-477f-84c6-778d8b79ebe7",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 35889
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "14a1d2f0-aea8-4303-87b8-98063c6ea771",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 79668
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "7ad1e409-88c4-4993-aa32-c679d8ba711f",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 62338
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "7422032b-cf31-481f-9eb1-ad89beb0e8c2",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 32577
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "60f5dc47-4ddd-491b-9442-244e6f8ca523",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 55420
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "b373ef5e-06e5-4474-8040-0d14b0180142",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 32272
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "0a1090dd-d8c6-42d6-ae94-e1a8c4b5ba12",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 67306
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "33eeda5f-fdc3-4a29-8b3b-8a891815c987",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 32203
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "3f7491d6-02ff-4cba-b2b2-26bea75f8ef6",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 64893
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "bd5e3dc0-9a92-4858-8c38-9b47cce04e68",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 38360
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "e6d359f9-7cd4-4ccc-b200-770a676cae9e",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 70680
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "7441494f-dda8-482b-a10a-5a0fe7325e07",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 44330
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "09d836f7-1346-48ae-8825-0b9d790b8968",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 39212
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "fda31fa0-84ff-47de-b267-6b86f8d852d2",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 47958
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "416b6660-4290-443e-b625-33f15bbdd4de",
+      "task_success": false,
+      "repair_count": 4,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 94143
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "74b62ecd-8f77-4e84-a9ca-e25f3d1a5d37",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 90433
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "c5642651-f564-4f81-9bd2-9705f2ede8f4",
+      "task_success": false,
+      "repair_count": 5,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 63007
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "0f1e9c15-e708-47d5-b4ab-f5347bd3ddd7",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 55547
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "6f369873-c356-4197-a069-cee71dc2dee4",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 47511
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "125ece5f-651b-417c-943a-ff9a36ccfb43",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 95784
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "8acd1e4a-806b-46ad-ac71-c9c42f078c74",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 70896
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "88209faa-06d1-4887-a428-eb96f8b7f817",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 35599
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "16bc3ee1-12c1-4fb1-855c-3f3f2fa39b35",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 63605
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "8a8a75cb-e90b-4aad-999a-700d238bc434",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 51687
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "86863fe9-7bcb-4415-a721-471ef2026488",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 35832
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "31449dde-8954-4c74-afb7-ba1b71c7dcc3",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 59076
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "4bab369c-a45b-4792-b752-45b5d59dcd83",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 91516
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "8ab86dee-3e24-41c9-a5fe-b1b20bf1ca64",
+      "task_success": false,
+      "repair_count": 4,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 124220
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "c9f43f3b-03ec-4fd1-9354-45450b82bd35",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 65136
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "443ed872-dc21-4f9b-bbef-1a50f9e7ec6b",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 32206
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "647ab585-b060-4b06-b93e-ee37fc786ced",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 66178
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "131ffa3d-e1c7-46a5-907e-d8b5844c90a3",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 5,
+      "steps_attempted": 7,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 49093
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "bd8cf283-7114-4fab-90cc-0cca8a6d9fc6",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 37257
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "dd0a78b7-8489-49a0-8cf6-b439d43f6b1f",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11336
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "15102cab-e5fe-4e11-acfa-d950ee1a5c0f",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11280
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "0e0bfe88-c67e-4c8d-930e-fd2a1a8e0b84",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11321
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "ca8e7204-9174-4980-aff8-14daf821e53e",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 26531
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "c684672c-df9b-45b2-bdbe-d714120b1936",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11419
+    }
+  ]
+}

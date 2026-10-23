@@ -1,0 +1,2696 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "gate_matrix_run",
+  "generated_at": "2026-10-23T21:37:00.953Z",
+  "mode": "live",
+  "dry_run": false,
+  "matrix_source": "scripts/testbed/matrix.json",
+  "matrix_target": "grafana-oss",
+  "selection": "all",
+  "runs_per_version": 6,
+  "repair_cap": null,
+  "interrupted": false,
+  "runs_planned": 48,
+  "runs_completed": 48,
+  "section9_floor": {
+    "min_runs": 42,
+    "min_step_executions": 400,
+    "meets_floor": true,
+    "runs_needed_per_version": 6
+  },
+  "versions_in_matrix": 8,
+  "versions_walked": [
+    "9.5.21",
+    "10.0.13",
+    "10.4.19",
+    "11.0.0",
+    "11.5.2",
+    "12.0.0",
+    "12.2.1",
+    "13.0.3"
+  ],
+  "versions_skipped": [],
+  "program_id": "prog-traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
+  "program_path": "artifacts/compiled/traj-gate-live-create-stat-dashboard-from-testdata-9.5.21-r3.bundle.json",
+  "program_source": "file",
+  "state_baseline_version": "9.5.21",
+  "cost_fresh_source": "experiments/gate-v1/out/fresh-baseline/baseline.json",
+  "cost_fresh": {
+    "tokens_in": 287850,
+    "tokens_out": 2925,
+    "wall_clock_ms": 140359,
+    "model_id": "glm-5-3"
+  },
+  "repair_task_goal": {
+    "source": "gate",
+    "sha256": "b51382e502d7"
+  },
+  "runs": [
+    {
+      "version": "9.5.21",
+      "run_id": "f1dc9a95-e2c8-4ba3-b1b4-cbacca49e71a",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2243
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "0cdc100a-39a3-4b59-aee2-445e6970b614",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2209
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "eff08658-5e50-4b1a-a50b-900a88d0af0b",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2199
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "883dc318-5a72-404e-a98d-9c203c42c0e4",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2220
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "ddbc0822-47ab-49da-82a2-19afd392e673",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2203
+    },
+    {
+      "version": "9.5.21",
+      "run_id": "028e08c9-208d-451e-b4cf-4f56b458037b",
+      "task_success": true,
+      "repair_count": 0,
+      "steps_replay_valid": 12,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 2245
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "8f170051-fac2-49b4-8121-c24d0ab6f592",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 45771
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "5f5d37db-b8c6-48f0-86b0-e09335368c38",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 32793
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "89f2d841-25d4-4f33-9e34-cd41a8826480",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 42929
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "c059c8f4-5f11-4048-aaf7-09cce0fa756b",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 32889
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "b126b0cf-26ed-45a7-98dd-d20376868c19",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 37626
+    },
+    {
+      "version": "10.0.13",
+      "run_id": "3112b65c-09ad-457a-9c4a-0ae05758bbf8",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 32744
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "aa333a1e-d39b-4bce-9046-67c26e52c677",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 43343
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "bbcad4a8-7c43-4194-b701-439bf4cb7756",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 32973
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "45430363-5cda-44da-b809-495eb6c65cbd",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 50634
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "e9e37123-b049-4ffa-98dc-4e4e485316db",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 33159
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "83875b48-7b7e-4348-bcee-0c1df7e7b0de",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 37608
+    },
+    {
+      "version": "10.4.19",
+      "run_id": "8409ec79-5820-4459-8b45-cac052cbbdf5",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 35131
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "abc9d551-afde-4f7c-b031-37e5bee88184",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 47880
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "044913b8-844e-404a-9712-020f58485980",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 32815
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "4140ef8a-5e8f-4f0d-85d1-e1041a25d022",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 46298
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "f5c72385-1637-42f4-a3ee-ba73fa4d9dfd",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 32880
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "57e9a401-208b-42ce-aac2-e337e8411800",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 44545
+    },
+    {
+      "version": "11.0.0",
+      "run_id": "5b1c3bb9-882a-4d4e-8d6a-6163d44de095",
+      "task_success": true,
+      "repair_count": 2,
+      "steps_replay_valid": 10,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 32790
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "cd13d737-ed4b-4c5b-af73-b0ce58849c5d",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 44921
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "3f1ff4ba-c044-4ac8-84f4-7e799f5552f1",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 41963
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "8016beda-6849-47fa-815c-4691ae35d5f8",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 33198
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "764e5f5e-9bb1-4dc3-b923-2fdc7b3b707c",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 52527
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "46dc25fc-dd85-4ef6-a458-61538a4a422a",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 40251
+    },
+    {
+      "version": "11.5.2",
+      "run_id": "6896eda7-2f91-4ba0-b15b-cc2c6f0b36aa",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 45519
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "438447de-e981-4ddf-a507-0e2692578d02",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 46135
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "5c7bb9d3-c595-4136-83cd-199e42ad5e60",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 41492
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "6bcf03d1-b6de-45c0-a07f-ced93f0740d4",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 33170
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "1d414980-43cb-4506-bcb6-75b86c1f25c7",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 47905
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "fb15c609-f5ef-4baf-ba7a-9c8a35b35cf3",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 37506
+    },
+    {
+      "version": "12.0.0",
+      "run_id": "6f454163-2cdf-45c9-b33c-ec59846c3cd6",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 46972
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "6f26eebb-10e6-4c2a-a502-030f1788ba87",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 46432
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "187b85dd-b5db-4c82-a7e7-8799c4532309",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 42695
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "4fd94fe8-6aca-40fd-b403-b6a401691de9",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 49593
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "6e8f566c-f81c-4c63-856d-43ea6d95db3d",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 33212
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "85fbce14-cad0-44a6-95dc-0cbbcc21531a",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 49668
+    },
+    {
+      "version": "12.2.1",
+      "run_id": "335b8060-8cd9-4e7a-b1b9-60e63d6f113e",
+      "task_success": true,
+      "repair_count": 3,
+      "steps_replay_valid": 9,
+      "steps_attempted": 12,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "PASS"
+        },
+        {
+          "step": 2,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 3,
+          "outcome": "PASS"
+        },
+        {
+          "step": 4,
+          "outcome": "PASS"
+        },
+        {
+          "step": 5,
+          "outcome": "PASS"
+        },
+        {
+          "step": 6,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 7,
+          "outcome": "REPAIRED_PASS"
+        },
+        {
+          "step": 8,
+          "outcome": "PASS"
+        },
+        {
+          "step": 9,
+          "outcome": "PASS"
+        },
+        {
+          "step": 10,
+          "outcome": "PASS"
+        },
+        {
+          "step": 11,
+          "outcome": "PASS"
+        }
+      ],
+      "wall_clock_total_ms": 38624
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "07de5ca5-8c7d-4b1a-958d-3683e11d057e",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 24721
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "7704e94c-d1ac-47bd-9bd5-8206bdbbac7f",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11216
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "126ba5fe-264e-4412-bf61-b262a9a898f3",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11185
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "ca0870d1-9fab-4c4e-8e42-fba57dd96fbd",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11176
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "22816b86-1122-44b7-9f05-501276ead0ab",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 35820
+    },
+    {
+      "version": "13.0.3",
+      "run_id": "c1658343-4f12-4bb3-87fc-689cae1d4731",
+      "task_success": false,
+      "repair_count": 3,
+      "steps_replay_valid": 1,
+      "steps_attempted": 2,
+      "steps_total": 12,
+      "outcomes": [
+        {
+          "step": 0,
+          "outcome": "PASS"
+        },
+        {
+          "step": 1,
+          "outcome": "REPAIR_EXHAUSTED",
+          "first_pass": "LOCATOR_NOT_FOUND"
+        }
+      ],
+      "wall_clock_total_ms": 11105
+    }
+  ]
+}

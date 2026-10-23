@@ -1,0 +1,9 @@
+name,status,value,numerator,denominator,formula
+"step-level replay-validity",computed,0.813953488372093,420,516,"count(replay_valid=true) / count(compiled steps executed)"
+"task-level success (with ≤2 repairs/run)",computed,0.5,24,48,"count(success_with_le_2_repairs=true) / count(runs)"
+"repair cost vs fresh (tokens)",computed,0.014048161522368383,4084.8541666666665,290775,"mean(cost_repair.tokens) / mean(cost_fresh.tokens)"
+"repair cost vs fresh (wall-clock)",computed,0.06034985881442112,8470.645833333334,140359,"mean(cost_repair.wall_clock_ms) / mean(cost_fresh.wall_clock_ms)"
+"self-heal success rate",computed,0.8571428571428571,36,42,"count(self_healed=true) / count(runs with steps_replay_valid < steps_total)"
+"time-to-repair (mean ms)",computed,8504.388888888889,306158,36,"mean(time_to_repair_total_ms) over runs with repairs"
+"amortized tokens/task over N runs",no_data,,0,0,"(sum(cost_program_build where present + cost_repair + cost_replay) over first N runs) / N — no_data unless some run in the window carries a measured cost_program_build, and no_data if any run in the window has repair_cost_measured=false"
+"cache hit-rate over N runs",no_data,,0,0,"count(program_source=cache AND replay_valid=true) / count(program_source=cache)"

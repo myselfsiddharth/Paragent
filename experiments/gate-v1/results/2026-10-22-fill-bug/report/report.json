@@ -1,0 +1,242 @@
+{
+  "prd_section": "§9",
+  "generated_at": "2026-10-23T06:02:59.647Z",
+  "row_counts": {
+    "step": 336,
+    "run": 48
+  },
+  "sample": {
+    "runs": 48,
+    "step_executions": 336,
+    "meets_floor": false,
+    "shortfall": "below PRD §9 floor: 336/400 step-executions"
+  },
+  "truncation": {
+    "runs": 48,
+    "runs_truncated_by_budget": 0,
+    "steps_unattempted": 240,
+    "status": "computed"
+  },
+  "cost_provenance": {
+    "runs_total": 48,
+    "runs_cost_measured": 48,
+    "runs_cost_unmeasured": 0
+  },
+  "repair_shape": {
+    "steps_repaired": 36,
+    "steps_repaired_with_pre_actions": 36,
+    "steps_replay_valid_with_pre_actions": 0,
+    "status": "computed"
+  },
+  "metrics": [
+    {
+      "name": "step-level replay-validity",
+      "formula": "count(replay_valid=true) / count(compiled steps executed)",
+      "value": 0.7678571428571429,
+      "status": "computed",
+      "numerator": 258,
+      "denominator": 336
+    },
+    {
+      "name": "task-level success (with ≤2 repairs/run)",
+      "formula": "count(success_with_le_2_repairs=true) / count(runs)",
+      "value": 0.125,
+      "status": "computed",
+      "numerator": 6,
+      "denominator": 48
+    },
+    {
+      "name": "repair cost vs fresh (tokens)",
+      "formula": "mean(cost_repair.tokens) / mean(cost_fresh.tokens)",
+      "value": 0.014906061306137293,
+      "status": "computed",
+      "numerator": 5355.270833333333,
+      "denominator": 359268
+    },
+    {
+      "name": "repair cost vs fresh (wall-clock)",
+      "formula": "mean(cost_repair.wall_clock_ms) / mean(cost_fresh.wall_clock_ms)",
+      "value": 0.14287831537486254,
+      "status": "computed",
+      "numerator": 26069.291666666668,
+      "denominator": 182458
+    },
+    {
+      "name": "self-heal success rate",
+      "formula": "count(self_healed=true) / count(runs with steps_replay_valid < steps_total)",
+      "value": 0.8571428571428571,
+      "status": "computed",
+      "numerator": 36,
+      "denominator": 42
+    },
+    {
+      "name": "time-to-repair (mean ms)",
+      "formula": "mean(time_to_repair_total_ms) over runs with repairs",
+      "value": 6687.388888888889,
+      "status": "computed",
+      "numerator": 240746,
+      "denominator": 36
+    },
+    {
+      "name": "amortized tokens/task over N runs",
+      "formula": "(sum(cost_program_build where present + cost_repair + cost_replay) over first N runs) / N — no_data unless some run in the window carries a measured cost_program_build, and no_data if any run in the window has repair_cost_measured=false",
+      "value": null,
+      "status": "no_data",
+      "numerator": 0,
+      "denominator": 0
+    },
+    {
+      "name": "cache hit-rate over N runs",
+      "formula": "count(program_source=cache AND replay_valid=true) / count(program_source=cache)",
+      "value": null,
+      "status": "no_data",
+      "numerator": 0,
+      "denominator": 0
+    }
+  ],
+  "per_version": [
+    {
+      "testbed_version": "10.0.13",
+      "runs_attempted": 6,
+      "runs_succeeded": 0,
+      "step_validity_per_run": [
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "step_validity_min": 0.7142857142857143,
+      "step_validity_max": 0.7142857142857143,
+      "step_validity_spread": 0,
+      "status": "computed"
+    },
+    {
+      "testbed_version": "10.4.19",
+      "runs_attempted": 6,
+      "runs_succeeded": 0,
+      "step_validity_per_run": [
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "step_validity_min": 0.7142857142857143,
+      "step_validity_max": 0.7142857142857143,
+      "step_validity_spread": 0,
+      "status": "computed"
+    },
+    {
+      "testbed_version": "11.0.0",
+      "runs_attempted": 6,
+      "runs_succeeded": 0,
+      "step_validity_per_run": [
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "step_validity_min": 0.7142857142857143,
+      "step_validity_max": 0.7142857142857143,
+      "step_validity_spread": 0,
+      "status": "computed"
+    },
+    {
+      "testbed_version": "11.5.2",
+      "runs_attempted": 6,
+      "runs_succeeded": 0,
+      "step_validity_per_run": [
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "step_validity_min": 0.7142857142857143,
+      "step_validity_max": 0.7142857142857143,
+      "step_validity_spread": 0,
+      "status": "computed"
+    },
+    {
+      "testbed_version": "12.0.0",
+      "runs_attempted": 6,
+      "runs_succeeded": 0,
+      "step_validity_per_run": [
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "step_validity_min": 0.7142857142857143,
+      "step_validity_max": 0.7142857142857143,
+      "step_validity_spread": 0,
+      "status": "computed"
+    },
+    {
+      "testbed_version": "12.2.1",
+      "runs_attempted": 6,
+      "runs_succeeded": 0,
+      "step_validity_per_run": [
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143,
+        0.7142857142857143
+      ],
+      "step_validity_min": 0.7142857142857143,
+      "step_validity_max": 0.7142857142857143,
+      "step_validity_spread": 0,
+      "status": "computed"
+    },
+    {
+      "testbed_version": "13.0.3",
+      "runs_attempted": 6,
+      "runs_succeeded": 0,
+      "step_validity_per_run": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "step_validity_min": 0.5,
+      "step_validity_max": 0.5,
+      "step_validity_spread": 0,
+      "status": "computed"
+    },
+    {
+      "testbed_version": "9.5.21",
+      "runs_attempted": 6,
+      "runs_succeeded": 6,
+      "step_validity_per_run": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "step_validity_min": 1,
+      "step_validity_max": 1,
+      "step_validity_spread": 0,
+      "status": "computed"
+    }
+  ],
+  "amortized_points": [],
+  "cache_hit_rate_points": [],
+  "amortization": {
+    "payments": 0,
+    "distinct_builds": 0,
+    "builds_paid": []
+  }
+}
