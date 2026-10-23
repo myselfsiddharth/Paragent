@@ -154,6 +154,37 @@ export interface ReplayRunnerOptions {
    * **Advisory only** — it does not and must not change what is attempted.
    */
   cacheProgramInvalidated?: boolean;
+  /**
+   * The task's goal in prose, handed to the repair model (ADR-0025, #225).
+   * The gate passes the same text the fresh baseline gets. Absent means the
+   * repair model is told nothing about what the task is for, as before.
+   */
+  taskGoal?: string;
+}
+
+/**
+ * The shortest string param value the task-goal guard compares. Shorter
+ * values ("5", "on") occur in ordinary prose, and refusing on them would
+ * refuse every goal; a value that short is not a secret worth the check.
+ */
+export const TASK_GOAL_MIN_PARAM_LENGTH = 4;
+
+/**
+ * A task goal that contains one of the run's bound values.
+ *
+ * The goal crosses the egress to a third-party model, and `params` is the bag
+ * secrets live in. A goal built by interpolating a binding would carry it
+ * out, so the run is refused before step 0, naming the param, never the value.
+ */
+export class TaskGoalCarriesParamError extends Error {
+  readonly code = "TASK_GOAL_CARRIES_PARAM" as const;
+  constructor(readonly param: string) {
+    super(
+      `task goal contains the value bound to param "${param}". The goal is sent ` +
+        "to the repair model and must be developer-authored prose, never a binding.",
+    );
+    this.name = "TaskGoalCarriesParamError";
+  }
 }
 
 function nowIso(): string {
@@ -186,6 +217,7 @@ export class ReplayRunner {
   private readonly repairContextLevel: ContextLevel;
   private readonly programSource?: ProgramSource;
   private readonly cacheProgramInvalidated?: boolean;
+  private readonly taskGoal?: string;
 
   constructor(options: ReplayRunnerOptions = {}) {
     this.dryRun = options.dryRun ?? false;
@@ -222,6 +254,9 @@ export class ReplayRunner {
       this.cacheProgramInvalidated = options.cacheProgramInvalidated;
     }
     if (options.page !== undefined) this.page = options.page;
+    if (options.taskGoal !== undefined && options.taskGoal.trim() !== "") {
+      this.taskGoal = options.taskGoal.trim();
+    }
   }
 
   getMetricsEmitter(): MetricsEmitter {
@@ -252,6 +287,18 @@ export class ReplayRunner {
     // First statement in the method, on purpose: nothing above it can have
     // emitted, mutated, or observed anything by the time a refusal is decided.
     assertParamsBound(program, params);
+    // ADR-0025: the goal leaves the process, so it must not carry a binding.
+    if (this.taskGoal !== undefined) {
+      for (const [name, value] of Object.entries(params)) {
+        if (
+          typeof value === "string" &&
+          value.length >= TASK_GOAL_MIN_PARAM_LENGTH &&
+          this.taskGoal.includes(value)
+        ) {
+          throw new TaskGoalCarriesParamError(name);
+        }
+      }
+    }
 
     const started = Date.now();
     const budgetStarted = this.now();
@@ -366,6 +413,7 @@ export class ReplayRunner {
             params,
           };
           if (lastMessage !== undefined) ctx.error_message = lastMessage;
+          if (this.taskGoal !== undefined) ctx.task_goal = this.taskGoal;
 
           let proposal: RepairProposal;
           let proposeMs: number;
@@ -830,6 +878,12 @@ export class ReplayRunner {
       // asked a model anything would imply a measurement that did not happen.
       ...(result.repair_count > 0
         ? { repair_context_level: this.repairContextLevel }
+        : {}),
+      // ADR-0025: whether the repair model was told the task's goal. Same
+      // reason as the context level: two self-heal rates are not comparable
+      // across it, and only meaningful when a repair actually ran.
+      ...(result.repair_count > 0 && this.taskGoal !== undefined
+        ? { repair_task_goal: true }
         : {}),
       ...(this.programSource !== undefined
         ? { program_source: this.programSource }

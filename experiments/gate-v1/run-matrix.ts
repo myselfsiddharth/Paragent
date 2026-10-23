@@ -61,6 +61,7 @@ import {
   runVersionLive,
   type VersionSkip,
 } from "./live-run.js";
+import { DEFAULT_TASK_GOAL } from "./task-goal.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, "out");
@@ -142,6 +143,14 @@ export interface Args {
    * flag is present.
    */
   repairProvider?: RepairProvider;
+  /**
+   * The task's goal for the repair model (ADR-0025). `--task-goal <text>`
+   * sets it; `--gate-task-goal` uses the gate task's, the exact text
+   * `gate:baseline` gives the fresh baseline. Unset means none, as before:
+   * the default program is not the gate task, and a goal for the wrong task
+   * would mislead the repair rather than inform it.
+   */
+  taskGoal?: string;
   /**
    * Path to a measured fresh-baseline summary (#39), written by
    * `npm run gate:baseline` as `out/fresh-baseline/baseline.json`. When set,
@@ -229,6 +238,9 @@ const VALUED_FLAGS = {
     }
     args.repairProvider = value as RepairProvider;
   },
+  "task-goal": (args, value) => {
+    args.taskGoal = value;
+  },
   "cost-fresh": (args, value) => {
     args.costFresh = value;
   },
@@ -256,6 +268,7 @@ function parseArgs(argv: string[]): Args {
     const a = argv[i] ?? "";
     if (a === "--dry-run") args.dryRun = true;
     else if (a === "--pool-only") args.poolOnly = true;
+    else if (a === "--gate-task-goal") args.taskGoal = DEFAULT_TASK_GOAL;
     else if (a === "--headed") args.headed = true;
     else if (a === "--keep-up") args.keepUp = true;
     else if (a === "--no-preamble") args.preamble = false;
@@ -339,6 +352,12 @@ function usage(): void {
                      this is a capital cost on one. Refuses (exit 2) if the file
                      is missing, not usable=true, has no program_build_id, or
                      measures zero tokens. Ignored under --dry-run.
+  --task-goal <text> Tell the repair model what the whole task is for (ADR-0025),
+                     so a repair can choose between options, not only find.
+                     Sent to the model; refused if it contains a bound value.
+  --gate-task-goal   Use the gate task's goal: the exact text gate:baseline
+                     gives the fresh baseline, so both sides of the §9 ratio
+                     are equally informed.
   --headed           Show the browser (live runs only).
   --keep-up          Leave each container running after its run, for inspection.
   --no-preamble      Skip the login preamble, for programs that log in as part
@@ -698,6 +717,7 @@ async function walkVersions(
       ...(opts.repairClient ? { repairClient: opts.repairClient } : {}),
       ...(baseline ? { baseline } : {}),
       ...(opts.costFresh ? { costFresh: opts.costFresh } : {}),
+      ...(opts.args.taskGoal ? { taskGoal: opts.args.taskGoal } : {}),
       ...(opts.claimProgramBuildPayment
         ? { claimProgramBuildPayment: opts.claimProgramBuildPayment }
         : {}),

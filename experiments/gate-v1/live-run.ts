@@ -194,6 +194,11 @@ export interface LiveRunOptions {
    */
   costFresh?: Cost;
   /**
+   * The task's goal, handed to the repair model (ADR-0025). The matrix passes
+   * the same text the fresh baseline gets, or nothing.
+   */
+  taskGoal?: string;
+  /**
    * Claim the matrix's ONE-TIME program-build payment (#39 step 4, ADR-0010).
    *
    * Called once per run. It answers with the payment for the **first** run that
@@ -449,6 +454,7 @@ export async function runVersionLive(
             : {}),
           ...(opts.repairClient ? { repairClient: opts.repairClient } : {}),
           ...(opts.costFresh ? { costFresh: opts.costFresh } : {}),
+          ...(opts.taskGoal ? { taskGoal: opts.taskGoal } : {}),
           // Both or neither: ReplayRunner throws on a cost without an id.
           ...(payment
             ? {

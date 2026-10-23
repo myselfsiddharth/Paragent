@@ -32,6 +32,10 @@
  * | `step.compiled_action.param_refs` | Names of the caller's slots. Structure, but no reason for the model to need it |
  * | `error_message` | Playwright text that can quote page content and, on a `fill`, the value it tried |
  *
+ * `task_goal` (ADR-0025) is **included** when the caller set one: developer-
+ * authored prose, the same text the fresh baseline is given. It is not page
+ * content, and `ReplayRunner.run` refuses a goal containing a bound value.
+ *
  * `error_message` is the one worth pausing on: it reads like diagnostics, and it
  * is the field a well-meaning change would add first. A Playwright locator error
  * can include the resolved selector and surrounding text, so it is page content
@@ -70,6 +74,8 @@ export interface RepairEgressPayload {
     visible_landmarks: string[];
     elements: ContextElement[];
   };
+  /** What the whole task is for (ADR-0025). Present only when the caller set one. */
+  task_goal?: string;
 }
 
 /**
@@ -111,7 +117,7 @@ function safeLocator(
  */
 export function serializeRepairContext(ctx: RepairContext): RepairEgressPayload {
   const page = ctx.page_state;
-  return {
+  const payload: RepairEgressPayload = {
     context_level: page.context_level ?? "landmarks",
     failed_outcome: ctx.failed_outcome,
     attempt: ctx.attempt,
@@ -133,4 +139,8 @@ export function serializeRepairContext(ctx: RepairContext): RepairEgressPayload 
       elements: page.elements ?? [],
     },
   };
+  if (typeof ctx.task_goal === "string" && ctx.task_goal !== "") {
+    payload.task_goal = ctx.task_goal;
+  }
+  return payload;
 }

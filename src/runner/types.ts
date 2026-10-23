@@ -193,6 +193,14 @@ export interface RepairContext {
   attempt: number;
   error_message?: string;
   params: ParamBindings;
+  /**
+   * What the whole task is for, in developer-authored prose (ADR-0025, #225):
+   * the same goal the fresh baseline is given, so both sides of the §9 ratio
+   * know what the task is. Lets a repair *choose* (which data source, which
+   * audience), not only find. Never page content and never a param value —
+   * `ReplayRunner.run` refuses a goal that contains one.
+   */
+  task_goal?: string;
 }
 
 export interface RepairProposal {

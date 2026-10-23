@@ -77,6 +77,11 @@ export interface StepMetric {
 }
 
 export interface RunMetric {
+  /**
+   * True when the repair model was told the task's goal (ADR-0025). Present
+   * only when a repair ran with one; absent means it was not.
+   */
+  repair_task_goal?: true;
   schema_version: typeof METRICS_SCHEMA_VERSION;
   metric_kind: "run";
   run_id: string;
