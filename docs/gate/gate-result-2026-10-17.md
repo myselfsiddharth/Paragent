@@ -26,7 +26,7 @@ did break, repair located the moved control for **0.3% of the fresh-reasoning to
 | --- | --- |
 | Program | `artifacts/compiled/traj-gate-live-create-stat-dashboard-from-testdata-9.5.21-r2.bundle.json` — the ADR-0006 gate task, 12 steps, re-recorded after the [ADR-0021](../decisions/ADR-0021-first-live-replay-corrections.md) corrections |
 | Matrix | All 8 pins in `scripts/testbed/matrix.json`, `--runs 6` → 48 runs, live, one seeded container per pin |
-| Repair | `VoyagerRepairModelClient`, model `qwen3-235b-a22b-instruct-2507` (open-weight, served through ASU's OpenAI-spec Voyager gateway), temperature 0, ≤2 repairs/run, context level `interactive` |
+| Repair | `VoyagerRepairModelClient`, model `qwen3-235b-a22b-instruct-2507` (superseded as the gate model by glm-5-3 in [ADR-0027](../decisions/ADR-0027-gate-model-and-repair-cap.md)) (open-weight, served through ASU's OpenAI-spec Voyager gateway), temperature 0, ≤2 repairs/run, context level `interactive` |
 | Fresh baseline | Same model, same gateway, `gate:baseline --provider voyager --runs 8` on 9.5.21 |
 | Bindings | `dashboard_title=Paragent Gate {run}`, `panel_title=Gate Panel`, `series_alias=gate`, `series_count=5` |
 | Code | Branch `gate/voyager-first-live-run`, commits `d041942` (Voyager clients) and `07a9440` (ADR-0021) |

@@ -20,7 +20,7 @@ import type { ProgramSource } from "../metrics/types.js";
 import { executeAction, NETWORK_IDLE_WAIT_MS } from "./actions.js";
 import { evaluateAssertion } from "./assertions.js";
 import { capturePageState, emptyPageState } from "./page-state.js";
-import { settledControlKeys } from "../shared/controls.js";
+import { settledControlKeys, visibleControlKeys } from "../shared/controls.js";
 import {
   DEFAULT_CONTEXT_LEVEL,
   type ContextLevel,
@@ -192,6 +192,26 @@ function isFailureOutcome(outcome: StepOutcome): boolean {
   return !SUCCESS_OUTCOMES.has(outcome);
 }
 
+/**
+ * A repair sequence's identity for the repeat guard: key order and field
+ * presence normalised, so the same actions re-sent with keys reordered are
+ * still recognised as the same.
+ */
+function sequenceKey(pre: CompiledAction[], action: CompiledAction): string {
+  const canon = (v: unknown): unknown =>
+    Array.isArray(v)
+      ? v.map(canon)
+      : v !== null && typeof v === "object"
+        ? Object.fromEntries(
+            Object.entries(v as Record<string, unknown>)
+              .filter(([, x]) => x !== undefined)
+              .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+              .map(([k, x]) => [k, canon(x)]),
+          )
+        : v;
+  return JSON.stringify(canon([pre, action]));
+}
+
 function errText(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
   return msg.split("\n")[0]!.slice(0, 300);
@@ -219,7 +239,13 @@ export class ReplayRunner {
   constructor(options: ReplayRunnerOptions = {}) {
     this.dryRun = options.dryRun ?? false;
     this.dryRunOutcomes = options.dryRunOutcomes ?? [];
-    this.maxRepairsPerRun = options.maxRepairsPerRun ?? 2;
+    const cap = options.maxRepairsPerRun ?? 2;
+    if (!(cap === Number.POSITIVE_INFINITY || (Number.isInteger(cap) && cap >= 0))) {
+      throw new Error(
+        `ReplayRunner: maxRepairsPerRun must be a non-negative integer or Infinity, got ${String(cap)}`,
+      );
+    }
+    this.maxRepairsPerRun = cap;
     this.repairClient = options.repairClient ?? new StubRepairModelClient();
     this.metrics = options.metrics ?? new MetricsEmitter();
     this.costFresh = options.costFresh ?? zeroCost();
@@ -242,6 +268,16 @@ export class ReplayRunner {
     }
     this.networkIdleWaitMs = options.networkIdleWaitMs ?? NETWORK_IDLE_WAIT_MS;
     this.runBudgetMs = options.runBudgetMs ?? DEFAULT_RUN_BUDGET_MS;
+    // ADR-0027: uncapped repairs are bounded by the time budget alone, so the
+    // two cannot both be off. That run would never stop paying for proposals.
+    if (
+      !Number.isFinite(this.maxRepairsPerRun) &&
+      !(Number.isFinite(this.runBudgetMs) && this.runBudgetMs > 0)
+    ) {
+      throw new Error(
+        "ReplayRunner: an uncapped run (maxRepairsPerRun: Infinity) needs a finite, positive runBudgetMs",
+      );
+    }
     this.now = options.now ?? Date.now;
     if (options.onStepOutcome !== undefined) this.onStepOutcome = options.onStepOutcome;
     this.repairContextLevel = options.repairContextLevel ?? DEFAULT_CONTEXT_LEVEL;
@@ -358,6 +394,28 @@ export class ReplayRunner {
         let repaired = false;
         let budgetStoppedRepair = false;
         const failureDetectedAt = Date.now();
+        // ADR-0027: uncapped runs only. A sequence that already failed on
+        // this step, re-proposed while the page is exactly as that failure
+        // left it (same URL, same visible controls), cannot pass now; at
+        // temperature 0 it is the common case and would spend the run's whole
+        // time budget learning nothing. If the page changed since (a dialog
+        // opened, loading finished), the repeat is a real retry and runs.
+        // Capped runs behave exactly as before ADR-0027.
+        const guardRepeats = !Number.isFinite(this.maxRepairsPerRun) && this.page !== undefined;
+        const failedOn = new Map<string, Set<string>>();
+        const markFailed = async (key: string) => {
+          const fp = await this.pageFingerprint();
+          if (fp === undefined) return;
+          const seen = failedOn.get(key) ?? new Set<string>();
+          seen.add(fp);
+          failedOn.set(key, seen);
+        };
+        if (guardRepeats) {
+          // The first pass is a tried sequence too: from the action that
+          // failed onward, on the page it left.
+          const firstFrom = (step.pre_actions ?? []).slice(first.pre_action_count ?? 0);
+          await markFailed(sequenceKey(firstFrom, step.compiled_action));
+        }
 
         while (repairCount < this.maxRepairsPerRun) {
           // Repair is where the unbounded latency lives once #27 wires a real
@@ -469,6 +527,29 @@ export class ReplayRunner {
 
           const currentAction = proposal.corrected_action;
           const proposedPre = proposal.pre_actions ?? [];
+          const proposalKey = sequenceKey(proposedPre, currentAction);
+          if (guardRepeats && failedOn.has(proposalKey)) {
+            const fp = await this.pageFingerprint();
+            if (fp !== undefined && failedOn.get(proposalKey)!.has(fp)) {
+              // Paid for (the cost is already in costRepair) and counted, but
+              // not executed. Not a cap: the step has nothing new to try. The
+              // real failure is kept in the message.
+              final = {
+                step_index: step.step_index,
+                outcome: "REPAIR_EXHAUSTED",
+                replay_valid: false,
+                mode: "repair",
+                cost: proposeCost,
+                repair_attempt: attempt,
+                assertion_strength: step.assertion.strength,
+                first_pass_outcome: first.outcome,
+                error_message:
+                  "repair re-proposed a sequence that already failed on this unchanged page" +
+                  (lastMessage !== undefined ? `; last failure: ${lastMessage}` : ""),
+              };
+              break;
+            }
+          }
           // ADR-0024: recorded pre-actions that ran before the failure stay.
           // They already acted on this page, so the retry does not run them
           // again, and the repaired step keeps them in front of the repair's.
@@ -534,6 +615,7 @@ export class ReplayRunner {
 
           lastOutcome = retry.outcome;
           lastMessage = retry.error_message;
+          if (guardRepeats) await markFailed(proposalKey);
           final = {
             ...retry,
             replay_valid: false,
@@ -649,6 +731,21 @@ export class ReplayRunner {
 
     this.emitRunMetric(runResult);
     return runResult;
+  }
+
+  /**
+   * The page as a repeat guard sees it (ADR-0027): URL plus the set of visible
+   * controls, in memory only. Undefined when there is no page or the read
+   * fails, which disables the guard for that attempt rather than guessing.
+   */
+  private async pageFingerprint(): Promise<string | undefined> {
+    if (!this.page) return undefined;
+    try {
+      const keys = [...(await visibleControlKeys(this.page))].sort();
+      return `${this.page.url()}\u0001${keys.join("\u0002")}`;
+    } catch {
+      return undefined;
+    }
   }
 
   private async attemptStep(args: {
@@ -882,6 +979,9 @@ export class ReplayRunner {
       ...(result.repair_count > 0
         ? { repair_context_level: this.repairContextLevel }
         : {}),
+      // ADR-0027: the per-run repair cap in force, null when uncapped (the
+      // gate's setting). Absent on rows written before it, which ran at 2.
+      repair_cap: Number.isFinite(this.maxRepairsPerRun) ? this.maxRepairsPerRun : null,
       // ADR-0025: whether the repair model was told the task's goal. Same
       // reason as the context level: two self-heal rates are not comparable
       // across it, and only meaningful when a repair actually ran.

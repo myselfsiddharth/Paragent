@@ -52,12 +52,19 @@ import { sanitizeProposal, type RepairModelClient } from "./repair.js";
 import type { RepairContext, RepairProposal } from "./types.js";
 
 /**
- * Chosen by a live probe against the gateway (2026-10): instruct-tuned, honours
- * `response_format: json_schema`, and large enough to ground a locator against a
- * list of role/name pairs. A *thinking* variant would spend `max_tokens` on
- * reasoning before the JSON, so it is not the default.
+ * The gate's model on Voyager, for BOTH sides of the §9 ratio: this client
+ * and `VoyagerFreshBaselineClient` share it, so they cannot drift apart.
+ *
+ * `glm-5-3` since ADR-0027 (2026-10-22). The first choice,
+ * `qwen3-235b-a22b-instruct-2507`, honours `response_format: json_schema` and
+ * grounds a single locator well, but could not compose a sequence repair
+ * (ADR-0024): on Grafana 10.0.13's data-source dialog it never proposed the
+ * dialog's choice followed by the step's own action, across five prompt and
+ * schema variants (ADR-0025). glm-5-3 did, 3/3 offline on the captured
+ * payload and live through the gate driver. A *thinking* variant would spend
+ * `max_tokens` on reasoning before the JSON, so none is the default.
  */
-export const DEFAULT_VOYAGER_MODEL = "qwen3-235b-a22b-instruct-2507";
+export const DEFAULT_VOYAGER_MODEL = "glm-5-3";
 
 export const DEFAULT_VOYAGER_MAX_TOKENS = 4_000;
 

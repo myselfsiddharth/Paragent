@@ -304,6 +304,14 @@
           "type": "string",
           "pattern": "^[0-9a-f]{12}$",
           "description": "Which task goal the repair model was given (ADR-0025, #225): the first 12 hex characters of its sha256, never the text. Present only when a repair ran with one. Self-heal rates under different goals, or none, are not comparable, which is why the goal is identified rather than merely flagged."
+        },
+        "repair_cap": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "The per-run repair cap in force (ADR-0027). null = uncapped: the run repairs until the task finishes or wall_clock_budget_ms runs out. Absent on rows written before ADR-0027, which ran at 2. Does not move the §9 bar: success_with_le_2_repairs is fixed at 2 regardless."
         }
       }
     }
