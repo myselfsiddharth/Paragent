@@ -107,6 +107,12 @@ export interface CacheRow {
    * as a MISS with a reason, never as "probably complete".
    */
   program?: ProgramRef;
+  /**
+   * Actions run, in order, before `compiled_action` (ADR-0024). Written only
+   * by a repair rewrite, classified for the pool exactly like
+   * `compiled_action` is. Absent means none.
+   */
+  pre_actions?: CompiledAction[];
   compiled_action: CompiledAction;
   assertion: AssertionLike;
   confidence: number;
@@ -132,6 +138,8 @@ export interface RepairProvenance {
   repair_attempt: number;
   /** Action type of the version this one replaced. */
   replaced_action_type?: string;
+  /** Pre-actions the repair left on the step (ADR-0024). Absent means none. */
+  pre_action_count?: number;
 }
 
 /** Input to write path — pool_eligible is ignored; B5 recomputes. */

@@ -42,7 +42,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { OutputConfig } from "@anthropic-ai/sdk/resources/messages/messages";
 import { serializeRepairContext } from "./repair-egress.js";
-import { sanitizeProposedAction, type RepairModelClient } from "./repair.js";
+import { sanitizeProposal, type RepairModelClient } from "./repair.js";
 import type { RepairContext, RepairProposal } from "./types.js";
 
 /**
@@ -86,6 +86,54 @@ export interface AnthropicRepairClientOptions {
   client?: Pick<Anthropic, "messages">;
 }
 
+/** One `CompiledAction`, as the model may propose it. */
+const ACTION_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["type", "locator_fallback_chain"],
+  properties: {
+    type: {
+      type: "string",
+      enum: [
+        "navigate", "click", "fill", "select", "check", "uncheck",
+        "press", "hover", "wait", "upload", "custom",
+      ],
+    },
+    url_template: { type: "string" },
+    key: { type: "string" },
+    // No `minimum`: numerical constraints are not supported by
+    // structured outputs, and the schema is compiled server-side on
+    // first use — so a rejection would land on the first paid call.
+    // Nothing is lost: `wait_ms` is optional and `sanitizeProposedAction`
+    // does not validate it either way.
+    wait_ms: { type: "integer" },
+    param_refs: { type: "array", items: { type: "string" } },
+    locator_fallback_chain: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["strategy"],
+        properties: {
+          strategy: {
+            type: "string",
+            enum: [
+              "role_name", "label", "testid", "structural",
+              "text", "placeholder", "css_vocab", "topology_only",
+            ],
+          },
+          role: { type: "string" },
+          name: { type: "string" },
+          label: { type: "string" },
+          testid: { type: "string" },
+          structural_path: { type: "string" },
+          tenant_scoped: { type: "boolean" },
+        },
+      },
+    },
+  },
+} as const;
+
 /**
  * JSON Schema for the proposal, mirroring `CompiledAction`.
  *
@@ -96,63 +144,18 @@ export interface AnthropicRepairClientOptions {
  * `assertion` is absent by construction. The model is never offered a field
  * that could edit one — `assertAssertionUnchanged` is the runtime guard, and
  * this is the guard that stops the request being made in the first place.
+ *
+ * `pre_actions` (ADR-0024) is optional, like `reasoning`, and has no
+ * `maxItems` for the same reason `wait_ms` has no `minimum`: the bound is
+ * enforced by `sanitizePreActions`, which drops an over-long sequence whole.
  */
 export const REPAIR_OUTPUT_SCHEMA = {
   type: "object",
   additionalProperties: false,
   required: ["corrected_action"],
   properties: {
-    corrected_action: {
-      anyOf: [
-        { type: "null" },
-        {
-          type: "object",
-          additionalProperties: false,
-          required: ["type", "locator_fallback_chain"],
-          properties: {
-            type: {
-              type: "string",
-              enum: [
-                "navigate", "click", "fill", "select", "check", "uncheck",
-                "press", "hover", "wait", "upload", "custom",
-              ],
-            },
-            url_template: { type: "string" },
-            key: { type: "string" },
-            // No `minimum`: numerical constraints are not supported by
-            // structured outputs, and the schema is compiled server-side on
-            // first use — so a rejection would land on the first paid call.
-            // Nothing is lost: `wait_ms` is optional and `sanitizeProposedAction`
-            // does not validate it either way.
-            wait_ms: { type: "integer" },
-            param_refs: { type: "array", items: { type: "string" } },
-            locator_fallback_chain: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["strategy"],
-                properties: {
-                  strategy: {
-                    type: "string",
-                    enum: [
-                      "role_name", "label", "testid", "structural",
-                      "text", "placeholder", "css_vocab", "topology_only",
-                    ],
-                  },
-                  role: { type: "string" },
-                  name: { type: "string" },
-                  label: { type: "string" },
-                  testid: { type: "string" },
-                  structural_path: { type: "string" },
-                  tenant_scoped: { type: "boolean" },
-                },
-              },
-            },
-          },
-        },
-      ],
-    },
+    corrected_action: { anyOf: [{ type: "null" }, ACTION_SCHEMA] },
+    pre_actions: { anyOf: [{ type: "null" }, { type: "array", items: ACTION_SCHEMA }] },
     reasoning: { type: "string" },
   },
 } as const;
@@ -163,7 +166,13 @@ export const REPAIR_SYSTEM_PROMPT = [
   "visible interactive elements on the page as role/name pairs.",
   "Return a corrected_action that targets an element from that list.",
   "Elements marked in_dialog belong to a dialog open in front of the page; while",
-  "one is open, it intercepts the page behind it.",
+  "one is open, it intercepts the page behind it, so a target that is not in the",
+  "dialog cannot be acted on yet.",
+  "If the page now needs an extra action before the step's own can work, return it",
+  "in pre_actions: at most 2, in order, each targeting an element from the list.",
+  "In particular, when a dialog is open and the step's target is behind it, the",
+  "dialog's action goes in pre_actions. pre_actions run first; corrected_action is",
+  "always the step's own action and runs last. Otherwise omit pre_actions.",
   "Return corrected_action: null if no element plausibly matches the step's intent.",
   "You may not change the assertion. Do not guess at page content you were not given.",
 ].join(" ");
@@ -305,15 +314,14 @@ export class AnthropicRepairModelClient implements RepairModelClient {
       };
     }
 
-    const { action, rejected } = sanitizeProposedAction(
-      (parsed as { corrected_action?: unknown }).corrected_action,
-    );
+    const { action, pre_actions, rejected } = sanitizeProposal(parsed);
     const proposal: RepairProposal = {
       corrected_action: action,
       tokens_in,
       tokens_out,
       model_id: this.model,
     };
+    if (pre_actions.length > 0) proposal.pre_actions = pre_actions;
     // Effort is recorded so the run is reproducible — it changes both cost and
     // quality, and a cost figure without it is not comparable across runs.
     proposal.notes = rejected

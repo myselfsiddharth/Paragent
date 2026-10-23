@@ -257,6 +257,33 @@ export function truncationSummary(rows: readonly MetricRow[]): {
   };
 }
 
+/**
+ * How many steps passed only by running inserted actions (ADR-0024, #213).
+ *
+ * A repair may now insert up to two actions before a step's own, and a step
+ * repaired that way replays with them afterwards. Both count as one repair and
+ * one step in every §9 ratio, which is the decision ADR-0024 records. So the
+ * ratios above depend on it, and this block says by how much: without it, a
+ * gate number that rests on insertion would read the same as one that does not.
+ */
+export function repairShapeSummary(rows: readonly MetricRow[]): {
+  steps_repaired: number;
+  steps_repaired_with_pre_actions: number;
+  steps_replay_valid_with_pre_actions: number;
+  status: "computed" | "no_data";
+} {
+  const steps = filterSteps(rows);
+  const repaired = steps.filter((r) => r.outcome === "REPAIRED_PASS");
+  return {
+    steps_repaired: repaired.length,
+    steps_repaired_with_pre_actions: repaired.filter((r) => (r.pre_action_count ?? 0) > 0).length,
+    steps_replay_valid_with_pre_actions: steps.filter(
+      (r) => r.replay_valid && (r.pre_action_count ?? 0) > 0,
+    ).length,
+    status: steps.length === 0 ? "no_data" : "computed",
+  };
+}
+
 export function taskSuccessLe2Repairs(
   rows: readonly MetricRow[],
 ): GateReportSection {
@@ -753,6 +780,8 @@ export function buildGateReport(rows: readonly MetricRow[]): {
    * whose repair cost nobody could observe.
    */
   cost_provenance: ReturnType<typeof repairCostProvenance>;
+  /** How many steps rest on inserted actions (ADR-0024). */
+  repair_shape: ReturnType<typeof repairShapeSummary>;
   metrics: GateReportSection[];
   per_version: VersionBreakdown[];
   amortized_points: AmortizationPoint[];
@@ -791,6 +820,9 @@ export function buildGateReport(rows: readonly MetricRow[]): {
     truncation: truncationSummary(rows),
     // Third of the three "what these numbers are computed over" blocks.
     cost_provenance: repairCostProvenance(rows),
+    // Fourth: the §9 ratios count an inserted action as part of one repair
+    // and one step (ADR-0024), so how many steps needed one is stated here.
+    repair_shape: repairShapeSummary(rows),
     metrics: [
       stepReplayValidity(rows),
       taskSuccessLe2Repairs(rows),

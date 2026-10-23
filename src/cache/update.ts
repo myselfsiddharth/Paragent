@@ -43,6 +43,8 @@ export interface StepOutcomeReport {
     run_id: string;
     repair_attempt: number;
     corrected_action: CacheRow["compiled_action"];
+    /** The step's pre-actions after the repair (ADR-0024). Empty clears them. */
+    pre_actions?: CacheRow["compiled_action"][];
   };
 }
 
@@ -80,7 +82,9 @@ function emptyChainCause(row: CacheRow): string {
     case "tenant_locator_text":
     case "tainted_attribute":
     case "non_vocab_role":
-      return "every corrected locator was tenant-tainted";
+      // ADR-0024: "an action" because it may be one of the repair's
+      // pre-actions; any of them losing every locator refuses the whole row.
+      return "every locator of a repaired action was tenant-tainted";
     default:
       return (
         "the corrected action was written with no usable locator " +
@@ -132,10 +136,18 @@ export function recordStepOutcome(
   // at least described a real control. Refuse instead, and leave the previous
   // version standing — the step's failure is already in the metrics, which is
   // where a failure belongs.
+  // ADR-0024: the same holds for each pre-action, and independently of the
+  // corrected action, which may legitimately have no locators (`press`).
+  const strippedPre = (ctx.repair?.pre_actions ?? []).some(
+    (a, i) =>
+      a.locator_fallback_chain.length > 0 &&
+      (row.pre_actions?.[i]?.locator_fallback_chain.length ?? 0) === 0,
+  );
   if (
     kind === "repaired" &&
-    (ctx.repair?.corrected_action.locator_fallback_chain.length ?? 0) > 0 &&
-    row.compiled_action.locator_fallback_chain.length === 0
+    (((ctx.repair?.corrected_action.locator_fallback_chain.length ?? 0) > 0 &&
+      row.compiled_action.locator_fallback_chain.length === 0) ||
+      strippedPre)
   ) {
     throw new CacheWriteRejectedError(
       `repair rewrite refused: ${emptyChainCause(row)}, leaving an action that ` +

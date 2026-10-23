@@ -154,8 +154,9 @@ ad-hoc field in one package — ambiguity here becomes a merge conflict in three
 ## Invariants you must not break
 
 1. **Assertions are immutable during repair.** `deepFreeze` + `assertAssertionUnchanged` in
-   `src/runner/`. A repair may supply `corrected_action` and nothing else. Weakening a check
-   to make a step pass makes replay-validity self-fulfilling and destroys the gate.
+   `src/runner/`. A repair may supply `corrected_action`, plus up to two `pre_actions` to run
+   before it (ADR-0024), and nothing else; pre-action locators pass the same pool boundary.
+   Weakening a check to make a step pass makes replay-validity self-fulfilling and destroys the gate.
 2. **Pool writes fail closed.** `writeCacheRow()` refuses a pool-eligible row carrying a
    free-text locator, a `tenant_scoped` locator, or a tenant literal in an assertion. Do not
    add a path to the cache store that bypasses it.

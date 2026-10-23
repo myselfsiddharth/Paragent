@@ -67,6 +67,14 @@
         }
       }
     },
+    "pre_actions": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/properties/compiled_action"
+      },
+      "description": "ADR-0024 (#213): actions run, in order, before compiled_action. Written only by a repair rewrite, for churn that adds an action. The step's assertion is checked once, after compiled_action. Each item's locators are classified for the pool exactly like compiled_action's; a pre-action that loses every locator makes the row pool-ineligible. Absent means none."
+    },
     "compiled_action": {
       "type": "object",
       "additionalProperties": false,
@@ -255,6 +263,12 @@
         "replaced_action_type": {
           "type": "string",
           "description": "Action type of the version this one replaced."
+        },
+        "pre_action_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "description": "Pre-actions the repair left on the step (ADR-0024). Absent means none."
         }
       }
     }

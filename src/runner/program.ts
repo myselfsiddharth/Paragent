@@ -27,6 +27,7 @@
 import type { CompiledTrajectoryBundle } from "../compiler/types.js";
 import { PROGRAM_ID_PREFIX, programIdFor } from "../shared/program-id.js";
 import { requiredParams } from "./params.js";
+import { sanitizePreActions } from "./repair.js";
 import type {
   Assertion,
   CompiledAction,
@@ -44,6 +45,37 @@ import type {
  * `src/shared/program-id.ts` — and `tests/unit/program-id.test.ts` asserts it.
  */
 export { PROGRAM_ID_PREFIX };
+
+/**
+ * One row, from either source, as a replayable step.
+ *
+ * Shared by `bundleToProgram` and `rowsToProgram` so the two cannot drift on
+ * how a row becomes a step. ADR-0024: a repaired row's `pre_actions` are part
+ * of the step, and dropping them would undo the repair on every replay. They
+ * are validated here, at load, with the rule a repair proposal is held to: a
+ * program that breaks it is refused before a browser opens, not discovered
+ * mid-run as a crash or as a metric row the contract forbids.
+ */
+function rowToStep(row: {
+  step_index: number;
+  row_id?: string;
+  pre_actions?: unknown;
+  compiled_action: unknown;
+  assertion: unknown;
+}): CompiledStep {
+  const step: CompiledStep = {
+    step_index: row.step_index,
+    compiled_action: row.compiled_action as CompiledAction,
+    assertion: row.assertion as Assertion,
+  };
+  if (row.row_id !== undefined) step.row_id = row.row_id;
+  const { actions, rejected } = sanitizePreActions(row.pre_actions);
+  if (rejected !== undefined) {
+    throw new Error(`step ${row.step_index}: invalid pre_actions — ${rejected}`);
+  }
+  if (actions.length > 0) step.pre_actions = actions;
+  return step;
+}
 
 /**
  * Adapt a compiled bundle for replay at `testbedVersion`.
@@ -64,12 +96,7 @@ export function bundleToProgram(
 ): CompiledProgram {
   const steps: CompiledStep[] = [...bundle.rows]
     .sort((a, b) => a.step_index - b.step_index)
-    .map((row) => ({
-      step_index: row.step_index,
-      row_id: row.row_id,
-      compiled_action: row.compiled_action as CompiledAction,
-      assertion: row.assertion as Assertion,
-    }));
+    .map((row) => rowToStep(row));
 
   const program: CompiledProgram = {
     schema_version: "1.0.0",
@@ -102,6 +129,7 @@ export interface ResolvedProgramLike {
   rows: ReadonlyArray<{
     step_index: number;
     row_id?: string;
+    pre_actions?: unknown;
     compiled_action: unknown;
     assertion: unknown;
   }>;
@@ -129,15 +157,7 @@ export function rowsToProgram(
 ): CompiledProgram {
   const steps: CompiledStep[] = [...resolved.rows]
     .sort((a, b) => a.step_index - b.step_index)
-    .map((row) => {
-      const step: CompiledStep = {
-        step_index: row.step_index,
-        compiled_action: row.compiled_action as CompiledAction,
-        assertion: row.assertion as Assertion,
-      };
-      if (row.row_id !== undefined) step.row_id = row.row_id;
-      return step;
-    });
+    .map((row) => rowToStep(row));
 
   const program: CompiledProgram = {
     schema_version: "1.0.0",

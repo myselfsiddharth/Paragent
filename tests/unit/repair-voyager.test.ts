@@ -246,6 +246,15 @@ describe("failure paths still report what they cost", () => {
     expect(p.corrected_action).toBeNull();
     expect(p.notes).not.toContain("rejected");
   });
+
+  it("passes through pre_actions (ADR-0024)", async () => {
+    const pre = { ...goodAction, locator_fallback_chain: [{ strategy: "role_name", role: "button", name: "TestData" }] };
+    const { client } = fakeClient(() =>
+      reply({ choices: [{ message: { content: JSON.stringify({ corrected_action: goodAction, pre_actions: [pre] }) } }] }),
+    );
+    const p = await new VoyagerRepairModelClient({ client }).propose(context());
+    expect(p.pre_actions).toEqual([pre]);
+  });
 });
 
 describe("assertion immutability at the proposal boundary", () => {

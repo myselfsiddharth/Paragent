@@ -9,7 +9,7 @@
  *
  * ## One contract, two providers
  *
- * The output schema, system prompt, and `sanitizeProposedAction` are imported
+ * The output schema, system prompt, and `sanitizeProposal` are imported
  * from the Anthropic client rather than copied. If the contract needs to change
  * it changes once, and the two providers cannot quietly drift apart while a
  * ratio is being computed across them.
@@ -48,7 +48,7 @@ import {
 } from "./chat-openai.js";
 import { REPAIR_OUTPUT_SCHEMA, REPAIR_SYSTEM_PROMPT } from "./repair-anthropic.js";
 import { serializeRepairContext } from "./repair-egress.js";
-import { sanitizeProposedAction, type RepairModelClient } from "./repair.js";
+import { sanitizeProposal, type RepairModelClient } from "./repair.js";
 import type { RepairContext, RepairProposal } from "./types.js";
 
 /**
@@ -187,16 +187,16 @@ export class VoyagerRepairModelClient implements RepairModelClient {
       };
     }
 
-    const { action, rejected } = sanitizeProposedAction(
-      (parsed as { corrected_action?: unknown } | null)?.corrected_action,
-    );
-    return {
+    const { action, pre_actions, rejected } = sanitizeProposal(parsed);
+    const proposal: RepairProposal = {
       corrected_action: action,
       tokens_in,
       tokens_out,
       model_id: this.model,
       notes: rejected ? `${rejected} (${provenance})` : provenance,
     };
+    if (pre_actions.length > 0) proposal.pre_actions = pre_actions;
+    return proposal;
   }
 }
 

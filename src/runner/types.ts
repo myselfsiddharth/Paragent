@@ -119,6 +119,15 @@ export interface Assertion {
 export interface CompiledStep {
   step_index: number;
   row_id?: string;
+  /**
+   * Actions run, in order, before `compiled_action` (ADR-0024, #213). Only a
+   * repair writes them: churn that **adds** an action, such as Grafana 10's
+   * data-source modal before "Change Visualization". The step's assertion is
+   * checked once, after `compiled_action`, so a step is still one step, with
+   * one post-condition, however many actions it takes. At most
+   * `MAX_PRE_ACTIONS`. Absent or empty means none.
+   */
+  pre_actions?: CompiledAction[];
   compiled_action: CompiledAction;
   assertion: Assertion;
 }
@@ -189,6 +198,12 @@ export interface RepairContext {
 export interface RepairProposal {
   /** Corrected action only — assertion changes are forbidden. */
   corrected_action: CompiledAction | null;
+  /**
+   * Actions to run before `corrected_action`, when the page now needs an extra
+   * one first (ADR-0024). Run as one attempt, checked once by the frozen
+   * assertion after `corrected_action`. Ignored when `corrected_action` is null.
+   */
+  pre_actions?: CompiledAction[];
   tokens_in: number;
   tokens_out: number;
   /**
@@ -234,6 +249,12 @@ export interface StepAttemptResult {
    */
   first_pass_outcome?: StepOutcome;
   /**
+   * How many pre-actions this attempt ran before `compiled_action` (ADR-0024).
+   * Present only when at least one did; emitted as `pre_action_count`, so a
+   * gate number that depends on inserted actions says so.
+   */
+  pre_action_count?: number;
+  /**
    * Something worth recording about a step that did **not** fail — today only
    * "the `networkidle` hint never fired, we proceeded anyway". Deliberately not
    * `error_message`: this is not an error, and a step carrying it can be `PASS`.
@@ -266,6 +287,12 @@ export interface StepOutcomeObservation {
     run_id: string;
     repair_attempt: number;
     corrected_action: CompiledAction;
+    /**
+     * The step's full pre-action list after the repair (ADR-0024): the
+     * recorded ones that ran before the failure, then the repair's own. Empty
+     * clears them, which is how a repair removes an action churn took away.
+     */
+    pre_actions: CompiledAction[];
   };
 }
 

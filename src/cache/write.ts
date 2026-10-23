@@ -83,12 +83,50 @@ function classifyLocators(
   return { poolSafe, tenantOnly, reasons: [...reasons] };
 }
 
+/**
+ * Every locator a row carries: its pre-actions' (ADR-0024), then its action's.
+ * The pool checks below walk this, so a pre-action is held to exactly the
+ * boundary `compiled_action` is.
+ */
+function allLocators(row: CacheRow): CompiledLocator[] {
+  return [
+    ...(row.pre_actions ?? []).flatMap((a) => a.locator_fallback_chain),
+    ...row.compiled_action.locator_fallback_chain,
+  ];
+}
+
+/**
+ * Pool-safe chains for a candidate's pre-actions, or the reason the row cannot
+ * be pooled (ADR-0024).
+ *
+ * A pre-action that had locators and keeps none cannot run from the pool. The
+ * row then cannot be pooled at all: a sequence missing an action replays a
+ * different task. There is no topology fallback here, unlike `compiled_action`,
+ * because a step's topology describes its own action, not the ones before it.
+ * A pre-action recorded with no locators (`press`, `navigate`) keeps none.
+ */
+function poolPreChains(
+  candidate: CacheRowCandidate,
+  check: (l: CompiledLocator) => ReturnType<typeof checkLocatorTaint>,
+): { chains: CompiledLocator[][]; refused?: PoolIneligibleReason } {
+  const chains: CompiledLocator[][] = [];
+  for (const action of candidate.pre_actions ?? []) {
+    const { poolSafe, reasons } = classifyLocators(action.locator_fallback_chain, check);
+    if (action.locator_fallback_chain.length > 0 && poolSafe.length === 0) {
+      return { chains: [], refused: reasons[0] ?? "other" };
+    }
+    chains.push(poolSafe);
+  }
+  return { chains };
+}
+
 function finalize(
   candidate: CacheRowCandidate,
   chain: CompiledLocator[],
   poolEligible: boolean,
   reason: PoolIneligibleReason | null,
   options?: WriteOptions,
+  preChains: CompiledLocator[][] = [],
 ): CacheRow {
   const row: CacheRow = {
     schema_version: "1.0.0",
@@ -109,6 +147,14 @@ function finalize(
     pool_ineligible_reason: poolEligible ? null : reason,
   };
   if (candidate.flow_topology) row.flow_topology = { ...candidate.flow_topology };
+  // ADR-0024. Each pre-action gets the chain its caller classified for it, and
+  // an empty one when none was given, which is what a refused row needs.
+  if (candidate.pre_actions && candidate.pre_actions.length > 0) {
+    row.pre_actions = candidate.pre_actions.map((a, i) => ({
+      ...a,
+      locator_fallback_chain: preChains[i] ?? [],
+    }));
+  }
   // finalize() builds the row explicitly rather than spreading, so anything the
   // update path sets has to be carried here or writeCacheRow — the only writer —
   // would silently drop it (ADR-0009).
@@ -127,7 +173,7 @@ function finalize(
   }
 
   if (row.pool_eligible) {
-    for (const loc of row.compiled_action.locator_fallback_chain) {
+    for (const loc of allLocators(row)) {
       if (loc.tenant_scoped === true && options?.failClosed !== false) {
         throw new CacheWriteRejectedError(
           "pool_eligible row must not include tenant_scoped locators",
@@ -157,8 +203,12 @@ export function buildPoolRow(
   if (assertionHasTenantLiteral(candidate.assertion)) {
     return finalize(candidate, [], false, "literal_in_assertion", options);
   }
+  const pre = poolPreChains(candidate, check);
+  if (pre.refused !== undefined) {
+    return finalize(candidate, [], false, pre.refused, options);
+  }
   if (poolSafe.length > 0) {
-    return finalize(candidate, poolSafe, true, null, options);
+    return finalize(candidate, poolSafe, true, null, options, pre.chains);
   }
   if (candidate.flow_topology) {
     return finalize(
@@ -167,6 +217,7 @@ export function buildPoolRow(
       true,
       null,
       options,
+      pre.chains,
     );
   }
   return finalize(candidate, [], false, reasons[0] ?? "other", options);
@@ -185,10 +236,16 @@ export function buildTenantRow(
     ...poolSafe.map((l) => ({ ...l, tenant_scoped: false })),
     ...tenantOnly,
   ];
+  // The tenant row keeps every pre-action locator, tainted ones marked, as
+  // it does for `compiled_action`.
+  const preChains = (candidate.pre_actions ?? []).map((a) => {
+    const c = classifyLocators(a.locator_fallback_chain, check);
+    return [...c.poolSafe, ...c.tenantOnly];
+  });
   let reason: PoolIneligibleReason = reasons[0] ?? "other";
   if (assertionHasTenantLiteral(candidate.assertion)) reason = "literal_in_assertion";
   else if (tenantOnly.length > 0 && poolSafe.length === 0) reason = "topology_only_degraded";
-  return finalize(candidate, chain, false, reason, options);
+  return finalize(candidate, chain, false, reason, options, preChains);
 }
 
 export function writeCacheRow(
@@ -204,8 +261,9 @@ export function writeCacheRow(
     );
   }
   if (poolRow.pool_eligible && failClosed) {
-    for (const loc of poolRow.compiled_action.locator_fallback_chain) {
-      const t = taintChecker(options)(loc);
+    const check = taintChecker(options);
+    for (const loc of allLocators(poolRow)) {
+      const t = check(loc);
       if (t.tainted) {
         throw new CacheWriteRejectedError(
           `pool write refused: locator still tainted (${t.rulesFired.join(",")})`,

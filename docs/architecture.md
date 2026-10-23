@@ -266,8 +266,8 @@ the aggregates compute correctly and report `no_data` honestly.
 1. **Assertions are frozen during repair.** `deepFreeze(structuredClone(step.assertion))`
    before the loop, then `assertAssertionUnchanged` is called after *every* proposal and
    again after every retry (`src/runner/replay.ts`; `src/runner/repair.ts`). A proposal may
-   supply `corrected_action` and nothing else. A repair loop that can weaken its own check
-   makes replay-validity self-fulfilling and destroys the gate number.
+   supply `corrected_action`, plus up to two `pre_actions` (ADR-0024), and nothing else. A
+   repair loop that can weaken its own check makes replay-validity self-fulfilling and destroys the gate number.
 2. **Pool writes fail closed.** `writeCacheRow` refuses — by throwing
    `CacheWriteRejectedError` — a pool-eligible row carrying a `tenant_scoped` locator, a
    free-text locator, or a tenant literal in an assertion (`src/cache/write.ts`). A caller

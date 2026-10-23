@@ -111,6 +111,7 @@ export function requiredParamsForAssertion(assertion: Assertion): string[] {
 export function requiredParamsForStep(step: CompiledStep): string[] {
   return [
     ...new Set([
+      ...(step.pre_actions ?? []).flatMap(requiredParamsForAction),
       ...requiredParamsForAction(step.compiled_action),
       ...requiredParamsForAssertion(step.assertion),
     ]),
