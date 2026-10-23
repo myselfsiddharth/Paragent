@@ -107,7 +107,8 @@ const ACTION_SCHEMA = {
     // Nothing is lost: `wait_ms` is optional and `sanitizeProposedAction`
     // does not validate it either way.
     wait_ms: { type: "integer" },
-    param_refs: { type: "array", items: { type: "string" } },
+    // No param_refs (ADR-0028): which value a step types is the step's, bound
+    // by the runner. Not offered, and stripped by sanitizeProposedAction if sent.
     locator_fallback_chain: {
       type: "array",
       items: {
@@ -175,7 +176,8 @@ export const REPAIR_SYSTEM_PROMPT = [
   "always the step's own action and runs last. Otherwise omit pre_actions.",
   "For a fill or select step, step.param_slots names the value the step types",
   "(e.g. panel_title): target the field that value belongs in. The value itself is",
-  "bound by the runner; do not set param_refs.",
+  "bound by the runner: never set param_refs or put {slot} holes in a URL or key,",
+  "and pre_actions never type (no fill or select).",
   "If task_goal is given, it says what the whole task is for: use it to choose",
   "between options (which item, which source), never as a source of element names.",
   "Return corrected_action: null if no element plausibly matches the step's intent.",

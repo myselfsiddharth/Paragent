@@ -41,17 +41,28 @@ Step 6 was blocked by two problems, both found with a live probe:
 
 ## Decision
 
-### 1. A corrected fill or select is bound to the step's own slots
+### 1. A proposal can never reference a caller's value; the runner binds the step's own
 
-`withStepBinding()` (`src/runner/replay.ts`) replaces a corrected fill's or select's `param_refs`
-with the step's own. The model chooses **where** to type, never **what**. Any slot it names is
-discarded, so it cannot rebind a step to another of the caller's values. The persisted repair
-carries the step's slots, so the cached row replays. Other action types are unchanged.
+The model chooses **where** to type, never **what**. Now that it is told slot names (below), that
+has to hold on every path, not just the corrected action:
+
+- **`sanitizeProposedAction` drops `param_refs`** from every model-proposed action, and the output
+  schema no longer offers the field.
+- **A `{slot}` hole** in a proposed `url_template` or `key` rejects the proposal whole. Otherwise a
+  `{password}` in a URL would carry a bound value off-site.
+- **A pre-action cannot type.** A fill or select in `pre_actions` rejects the proposal; a
+  pre-action has no value of its own.
+- **`withStepBinding()`** binds a corrected fill or select to the step's own slots. It uses
+  `requiredParamsForAction`, the same rule as the run-start check, so only a fill/select step's
+  slots qualify, never a navigate step's URL holes. The persisted repair carries them, so the
+  cached row replays.
 
 ### 2. The egress carries the slot names of a fill or select step
 
-`step.param_slots`: the names (`["panel_title"]`), copied from the compiled step. Never a value,
-and never looked up in `params`. Absent for other steps. The prompt gains one line: target the
+`step.param_slots`: the names (`["panel_title"]`), copied from the compiled step through
+`requiredParamsForAction`. Never a value, and never looked up in `params`. A name that contains a
+bound value is dropped, the same fail-closed rule as the task goal. Absent for other steps.
+`docs/privacy/boundary-spec.md` lists the field. The prompt gains one line: target the
 field the named value belongs in; the runner binds the value.
 
 **What it reveals.** That a field of that kind exists: a slot named `password` says the step types

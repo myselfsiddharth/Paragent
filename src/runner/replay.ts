@@ -25,7 +25,7 @@ import {
   DEFAULT_CONTEXT_LEVEL,
   type ContextLevel,
 } from "../shared/page-context.js";
-import { assertParamsBound } from "./params.js";
+import { assertParamsBound, requiredParamsForAction } from "./params.js";
 import { normalizeTaskGoal, paramInTaskGoal, taskGoalDigest } from "./task-goal.js";
 
 export { TASK_GOAL_MIN_PARAM_LENGTH } from "./task-goal.js";
@@ -204,11 +204,12 @@ function isFailureOutcome(outcome: StepOutcome): boolean {
  * to another slot. Other action types are returned unchanged.
  */
 function withStepBinding(proposed: CompiledAction, own: CompiledAction): CompiledAction {
-  if (proposed.type !== "fill" && proposed.type !== "select") return proposed;
   const { param_refs: _ignored, ...rest } = proposed;
-  return own.param_refs !== undefined && own.param_refs.length > 0
-    ? { ...rest, param_refs: [...own.param_refs] }
-    : rest;
+  if (proposed.type !== "fill" && proposed.type !== "select") return rest;
+  // Only a fill/select step's own slots: a navigate or wait step's slots are
+  // a URL hole or a duration, never a value to type.
+  const slots = requiredParamsForAction(own);
+  return slots.length > 0 ? { ...rest, param_refs: slots } : rest;
 }
 
 /**

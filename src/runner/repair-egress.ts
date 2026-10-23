@@ -51,6 +51,7 @@
  */
 
 import type { ContextElement, ContextLevel } from "../shared/page-context.js";
+import { requiredParamsForAction } from "./params.js";
 import { normalizeTaskGoal, paramInTaskGoal } from "./task-goal.js";
 import type { RepairContext } from "./types.js";
 
@@ -158,11 +159,14 @@ export function serializeRepairContext(ctx: RepairContext): RepairEgressPayload 
   // (fail closed) whoever built the context. ReplayRunner refuses such a run
   // before step 0; this is what holds for every other caller.
   const goal = normalizeTaskGoal(ctx.task_goal);
-  const action = ctx.step.compiled_action;
-  if ((action.type === "fill" || action.type === "select") && (action.param_refs?.length ?? 0) > 0) {
-    // Names only: copied from the compiled step, never looked up in params.
-    payload.step.param_slots = action.param_refs!.filter((n): n is string => typeof n === "string");
-  }
+  // Names only, copied from the compiled step through the same rule the
+  // run-start check uses (fill/select slots, nothing else), and never looked
+  // up in params. Fail closed, like the task goal: a name that contains a
+  // bound value is dropped.
+  const slots = requiredParamsForAction(ctx.step.compiled_action).filter(
+    (name) => paramInTaskGoal(name, ctx.params) === undefined,
+  );
+  if (slots.length > 0) payload.step.param_slots = slots;
   if (goal !== undefined && paramInTaskGoal(goal, ctx.params) === undefined) {
     payload.task_goal = goal;
   }
