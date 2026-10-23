@@ -218,3 +218,65 @@ describe("no repair client bypasses the egress boundary (#125)", () => {
     expect(rawSerialize.test("JSON.stringify(serializeRepairContext(ctx))")).toBe(false);
   });
 });
+
+/**
+ * ADR-0025 (#225): the task's goal crosses the egress, so the repair model can
+ * choose between options (which data source) and not only find. It is the one
+ * field here that is free prose, so its boundary is pinned on both sides: it
+ * travels verbatim and alone, and a goal carrying a bound value never starts.
+ */
+describe("repair egress: the task goal (ADR-0025)", () => {
+  const GOAL = "Create a dashboard with a panel using the TestData data source.";
+
+  it("carries the goal verbatim when one is set, and nothing new besides it", () => {
+    const withGoal = serializeRepairContext({ ...contextWithEverything(), task_goal: GOAL });
+    const without = serializeRepairContext(contextWithEverything());
+    expect(withGoal.task_goal).toBe(GOAL);
+    const { task_goal: _goal, ...rest } = withGoal;
+    expect(rest).toEqual(without);
+    for (const value of Object.values(CANARY)) {
+      expect(JSON.stringify(withGoal)).not.toContain(value);
+    }
+  });
+
+  it("drops a goal that contains a bound value, whoever built the context", () => {
+    // ReplayRunner refuses such a run; this is the boundary for every other caller.
+    const leaky = { ...contextWithEverything(), task_goal: `Sign in as ${CANARY.paramUser}.` };
+    const out = serializeRepairContext(leaky);
+    expect("task_goal" in out).toBe(false);
+    expect(JSON.stringify(out)).not.toContain(CANARY.paramUser);
+  });
+
+  it("omits the field entirely when no goal is set", () => {
+    expect("task_goal" in serializeRepairContext(contextWithEverything())).toBe(false);
+  });
+
+  it("a run whose goal contains a bound value is refused before step 0, naming the param only", async () => {
+    const { ReplayRunner, TaskGoalCarriesParamError } = await import("../../src/runner/replay.js");
+    const { MetricsEmitter } = await import("../../src/metrics/emitter.js");
+    const metrics = new MetricsEmitter();
+    const runner = new ReplayRunner({
+      dryRun: true,
+      metrics,
+      taskGoal: `Log in with ${CANARY.paramSecret} and open the dashboard.`,
+    });
+    const program = {
+      schema_version: "1.0.0" as const,
+      program_id: "p",
+      site_key: "s",
+      task_key: "t",
+      testbed_version: "v",
+      steps: [],
+    };
+    let thrown: unknown;
+    try {
+      await runner.run(program, { password: CANARY.paramSecret });
+    } catch (err) {
+      thrown = err;
+    }
+    expect(thrown).toBeInstanceOf(TaskGoalCarriesParamError);
+    expect((thrown as Error).message).toContain('"password"');
+    expect((thrown as Error).message).not.toContain(CANARY.paramSecret);
+    expect(metrics.getRows()).toHaveLength(0);
+  });
+});

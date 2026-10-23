@@ -77,6 +77,7 @@ export interface StepMetric {
 }
 
 export interface RunMetric {
+
   schema_version: typeof METRICS_SCHEMA_VERSION;
   metric_kind: "run";
   run_id: string;
@@ -140,6 +141,12 @@ export interface RunMetric {
    * repair was attempted. A self-heal rate without this is not reproducible.
    */
   repair_context_level?: "landmarks" | "interactive" | "tree";
+  /**
+   * Which task goal the repair model was told (ADR-0025): the first 12 hex
+   * of its sha256, not the text. Present only when a repair ran with one.
+   * Self-heal rates under different goals, or none, are not comparable.
+   */
+  repair_task_goal_sha256?: string;
   /**
    * Where this run's program came from (ADR-0014, #118). Absent on runs that
    * predate the field — never assumed to be `file`.

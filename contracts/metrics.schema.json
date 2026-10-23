@@ -299,6 +299,11 @@
             "tree"
           ],
           "description": "Context budget the repair model was given for this run (ADR-0012). Recorded because a self-heal rate is not reproducible without it: two runs with the same model_id and different levels are not comparable."
+        },
+        "repair_task_goal_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}$",
+          "description": "Which task goal the repair model was given (ADR-0025, #225): the first 12 hex characters of its sha256, never the text. Present only when a repair ran with one. Self-heal rates under different goals, or none, are not comparable, which is why the goal is identified rather than merely flagged."
         }
       }
     }

@@ -579,6 +579,7 @@ describe("gate:matrix valued flags (#165)", () => {
     "task-key": { value: "open-dashboards-list", expect: (a) => a.taskKey, want: "open-dashboards-list" },
     "repair-model": { value: "claude-opus-5", expect: (a) => a.repairModel, want: "claude-opus-5" },
     "repair-provider": { value: "voyager", expect: (a) => a.repairProvider, want: "voyager" },
+    "task-goal": { value: "Do the task.", expect: (a) => a.taskGoal, want: "Do the task." },
     "cost-fresh": { value: "/tmp/baseline.json", expect: (a) => a.costFresh, want: "/tmp/baseline.json" },
     "cost-program-build": {
       value: "/tmp/build.json",
@@ -596,6 +597,7 @@ describe("gate:matrix valued flags (#165)", () => {
     params: {},
     runs: 3,
     poolOnly: false,
+    gateTaskGoal: false,
   });
 
   it("has a sample for every flag the parser accepts", () => {

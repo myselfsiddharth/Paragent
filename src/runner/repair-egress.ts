@@ -32,6 +32,11 @@
  * | `step.compiled_action.param_refs` | Names of the caller's slots. Structure, but no reason for the model to need it |
  * | `error_message` | Playwright text that can quote page content and, on a `fill`, the value it tried |
  *
+ * `task_goal` (ADR-0025) is **included** when the caller set one: developer-
+ * authored prose, the same text the fresh baseline is given. It is not page
+ * content. A goal containing a bound value is dropped here and refused by
+ * `ReplayRunner.run` before step 0.
+ *
  * `error_message` is the one worth pausing on: it reads like diagnostics, and it
  * is the field a well-meaning change would add first. A Playwright locator error
  * can include the resolved selector and surrounding text, so it is page content
@@ -39,6 +44,7 @@
  */
 
 import type { ContextElement, ContextLevel } from "../shared/page-context.js";
+import { normalizeTaskGoal, paramInTaskGoal } from "./task-goal.js";
 import type { RepairContext } from "./types.js";
 
 /**
@@ -70,6 +76,8 @@ export interface RepairEgressPayload {
     visible_landmarks: string[];
     elements: ContextElement[];
   };
+  /** What the whole task is for (ADR-0025). Present only when the caller set one. */
+  task_goal?: string;
 }
 
 /**
@@ -111,7 +119,7 @@ function safeLocator(
  */
 export function serializeRepairContext(ctx: RepairContext): RepairEgressPayload {
   const page = ctx.page_state;
-  return {
+  const payload: RepairEgressPayload = {
     context_level: page.context_level ?? "landmarks",
     failed_outcome: ctx.failed_outcome,
     attempt: ctx.attempt,
@@ -133,4 +141,13 @@ export function serializeRepairContext(ctx: RepairContext): RepairEgressPayload 
       elements: page.elements ?? [],
     },
   };
+  // ADR-0025, enforced here too, at the boundary every client goes through:
+  // a blank goal is no goal, and a goal containing a bound value is dropped
+  // (fail closed) whoever built the context. ReplayRunner refuses such a run
+  // before step 0; this is what holds for every other caller.
+  const goal = normalizeTaskGoal(ctx.task_goal);
+  if (goal !== undefined && paramInTaskGoal(goal, ctx.params) === undefined) {
+    payload.task_goal = goal;
+  }
+  return payload;
 }

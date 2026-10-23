@@ -75,6 +75,7 @@ import { readinessPlan, ReadinessTimeoutError, waitUntilReady } from "../../src/
 import { seedInstance } from "../../src/testbed/seed.js";
 import { loadDotEnv } from "./load-env.js";
 import { loadProgram } from "./run-matrix.js";
+import { DEFAULT_TASK_GOAL } from "./task-goal.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, "out", "fresh-baseline");
@@ -85,21 +86,8 @@ const DRY_RUN_NOTE = "dry-run — tokens remain 0; not a fresh-baseline measurem
 /** At least 3 (issue #39's own floor: mean and spread need more than one sample). */
 export const DEFAULT_FRESH_RUNS = 3;
 
-/**
- * The gate task's stated goal, in prose — never the compiled program's steps,
- * locators, or assertions. Phrased at the same level of intent as ADR-0006's
- * decision table, deliberately not its per-step DOM detail: a fresh agent is
- * told what "done" looks like, not how a recording already got there.
- *
- * Overridable via `--task-goal` for a different program under test.
- */
-export const DEFAULT_TASK_GOAL =
-  "Create a new dashboard. Add a panel to it using the TestData data source, and " +
-  "configure the panel as a Stat visualization with a query alias and a series " +
-  "count of your choosing. Give the panel a title. Apply the panel back to the " +
-  "dashboard, then save the dashboard under a title of your choosing. Confirm the " +
-  "saved dashboard appears in the dashboards list. The task is done once the " +
-  "dashboard is saved and visible in that list.";
+// ADR-0025: shared with the repair side of the matrix, so it lives in one place.
+export { DEFAULT_TASK_GOAL };
 
 interface Args {
   dryRun: boolean;

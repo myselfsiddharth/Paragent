@@ -173,6 +173,8 @@ export const REPAIR_SYSTEM_PROMPT = [
   "In particular, when a dialog is open and the step's target is behind it, the",
   "dialog's action goes in pre_actions. pre_actions run first; corrected_action is",
   "always the step's own action and runs last. Otherwise omit pre_actions.",
+  "If task_goal is given, it says what the whole task is for: use it to choose",
+  "between options (which item, which source), never as a source of element names.",
   "Return corrected_action: null if no element plausibly matches the step's intent.",
   "You may not change the assertion. Do not guess at page content you were not given.",
 ].join(" ");
