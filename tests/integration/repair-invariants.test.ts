@@ -149,14 +149,10 @@ class ScriptedClient implements RepairModelClient {
 
   async propose(ctx: RepairContext): Promise<RepairProposal> {
     this.calls.push(ctx);
-    // Each failing attempt proposes a *different* no-op (a distinct blank page),
-    // as a real model trying alternatives would. An identical re-proposal ends
-    // the step without executing it (ADR-0027), which is not what these tests
-    // are about.
     const corrected_action =
       this.fixOnAttempt !== null && ctx.attempt === this.fixOnAttempt
         ? FIX_NAVIGATE
-        : { ...NOOP_NAVIGATE, url_template: `about:blank#attempt-${ctx.attempt}` };
+        : NOOP_NAVIGATE;
     return {
       corrected_action,
       tokens_in: this.tokens.in,

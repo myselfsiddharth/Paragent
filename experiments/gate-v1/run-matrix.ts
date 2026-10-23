@@ -253,7 +253,9 @@ const VALUED_FLAGS = {
       args.maxRepairsPerRun = Number.POSITIVE_INFINITY;
       return;
     }
-    const n = Number(value);
+    // Digits only: Number("") is 0 and Number("0x2") is 2, and either would
+    // silently change what a gate run measures.
+    const n = /^\d+$/.test(value) ? Number(value) : Number.NaN;
     if (!Number.isInteger(n) || n < 0) {
       throw new Error(`--max-repairs-per-run must be a non-negative integer or "none", got: ${value}`);
     }

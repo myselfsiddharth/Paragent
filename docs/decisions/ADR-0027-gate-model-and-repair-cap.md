@@ -69,11 +69,30 @@ cap only decided how far a run got. At 2, it cost two things:
 2. **Repair cost was understated.** A run that stops early spends less than one that finishes,
    while `cost_fresh` is the cost of a fresh attempt at the whole task.
 
-**One guard, which is not a cap.** When the model proposes exactly the sequence it already tried
-and failed on the current step, the step ends `REPAIR_EXHAUSTED` without executing it. The same
-actions on the same page cannot pass a check they just failed. At temperature 0 this is the common
-case, and it would otherwise spend the whole time budget learning nothing. The proposal's cost
-is still counted.
+**One guard, which is not a cap, and applies only to uncapped runs.** The step ends
+`REPAIR_EXHAUSTED`, without executing the proposal, when two things are both true:
+
+- the model proposes a sequence that already failed on this step (the first pass counts);
+- the page is **exactly as that failure left it**: same URL, same set of visible controls.
+
+The same actions on an unchanged page cannot pass a check they just failed. At temperature 0 this
+is the common case, and it would otherwise spend the whole time budget learning nothing. If the
+page changed since (a dialog opened, loading finished), the repeat runs: that is a real retry.
+
+The proposal's cost is still counted, and the message keeps the real failure ("last failure:
+..."). Sequences are compared with key order normalised. Capped callers behave exactly as before
+ADR-0027.
+
+The underlying problem, that the model is not told what it already tried, is
+[#232](https://github.com/myselfsiddharth/Paragent/issues/232).
+
+**Guards on the setting.**
+
+- `ReplayRunner` refuses a cap that is not a non-negative integer or `Infinity`.
+- It refuses an uncapped run with no finite, positive time budget, because that run could never
+  stop.
+- The `--max-repairs-per-run` flag accepts digits or `none` only: `""` and `0x2` would otherwise
+  parse as 0 and 2.
 
 **Recording.** Run rows gain `repair_cap`: the cap in force, `null` when uncapped, absent on rows
 from before this ADR (cap 2). `matrix-run.json` records it too. `ReplayRunner`'s own default stays
@@ -85,6 +104,15 @@ from before this ADR (cap 2). `matrix-run.json` records it too. `ReplayRunner`'s
   run, and the §9 bar is unaffected either way.
 - **Keep the model and keep tuning prompts.** Five variants did not get qwen3-235b to compose the
   sequence, and the same prompt and payload work on glm-5-3 and qwen35-397b.
+
+## Measured: glm-5-3 is not spending its budget on hidden reasoning
+
+GLM-family models can reason before answering, and the 4,000-token completion cap would then
+truncate the JSON. That is not what happens on this gateway:
+
+- Across the 231 fresh-baseline turns, glm-5-3 produced 58–163 output tokens per turn, and no
+  reply was truncated.
+- Live repair proposals averaged about 267 output tokens.
 
 ## Open questions / what I could not verify
 

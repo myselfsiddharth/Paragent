@@ -91,34 +91,82 @@ describe("uncapped repairs (ADR-0027)", () => {
     expect(run.repair_cap).toBe(2);
   });
 
-  it("a repeated proposal ends the step instead of spending the time budget", async () => {
-    const { launchTestBrowser } = await import("../helpers/browser.js");
-    const browser = await launchTestBrowser();
-    try {
-      const page = await browser.newPage();
-      page.setDefaultTimeout(300);
-      await page.setContent("<main><p>nothing to click</p></main>");
-      const same = new Same();
-      const result = await new ReplayRunner({
-        page,
-        repairClient: same,
-        maxRepairsPerRun: Number.POSITIVE_INFINITY,
-      }).run(program(1));
-      // One real attempt, then the identical proposal is refused unexecuted.
-      expect(same.calls).toBe(2);
-      expect(result.step_results[0]).toMatchObject({
-        outcome: "REPAIR_EXHAUSTED",
-        error_message: "repair proposed a sequence it already tried on this step",
+  describe("the repeat guard (uncapped runs only)", () => {
+    const withPage = async (html: string, fn: (page: import("playwright").Page) => Promise<void>) => {
+      const { launchTestBrowser } = await import("../helpers/browser.js");
+      const browser = await launchTestBrowser();
+      try {
+        const page = await browser.newPage();
+        page.setDefaultTimeout(300);
+        await page.setContent(html);
+        await fn(page);
+      } finally {
+        await browser.close();
+      }
+    };
+
+    it("refuses, unexecuted, the action that just failed on a page that has not changed", async () => {
+      await withPage("<main><p>nothing to click</p></main>", async (page) => {
+        const same = new Same();
+        const result = await new ReplayRunner({ page, repairClient: same, maxRepairsPerRun: Number.POSITIVE_INFINITY })
+          .run(program(1));
+        // The first pass counts as tried, so the very first identical proposal is refused.
+        expect(same.calls).toBe(1);
+        expect(result.step_results[0]?.outcome).toBe("REPAIR_EXHAUSTED");
+        expect(result.step_results[0]?.error_message).toMatch(
+          /already failed on this unchanged page; last failure: .*no locator matched/,
+        );
       });
-    } finally {
-      await browser.close();
+    }, 60_000);
+
+    it("lets the same proposal run again once the page has changed", async () => {
+      // The button appears 600 ms in; the model takes 900 ms to answer.
+      const html = `<main></main><script>setTimeout(() => {
+        const b = document.createElement("button"); b.setAttribute("aria-label", "b0");
+        document.querySelector("main").appendChild(b); }, 600)</script>`;
+      await withPage(html, async (page) => {
+        class SlowSame extends Same {
+          override async propose(ctx: RepairContext): Promise<RepairProposal> {
+            await new Promise((r) => setTimeout(r, 900));
+            return super.propose(ctx);
+          }
+        }
+        const result = await new ReplayRunner({
+          page,
+          repairClient: new SlowSame(),
+          maxRepairsPerRun: Number.POSITIVE_INFINITY,
+        }).run(program(1));
+        expect(result.step_results[0]?.outcome).toBe("REPAIRED_PASS");
+      });
+    }, 60_000);
+
+    it("leaves capped runs exactly as before: identical proposals still execute", async () => {
+      await withPage("<main><p>nothing to click</p></main>", async (page) => {
+        const same = new Same();
+        await new ReplayRunner({ page, repairClient: same, maxRepairsPerRun: 2 }).run(program(1));
+        expect(same.calls).toBe(2);
+      });
+    }, 60_000);
+  });
+
+  it("refuses a cap that is not a non-negative integer or Infinity, and uncapped with no time budget", () => {
+    for (const bad of [Number.NaN, -1, 2.5]) {
+      expect(() => new ReplayRunner({ maxRepairsPerRun: bad })).toThrow(/non-negative integer or Infinity/);
     }
-  }, 60_000);
+    for (const budget of [0, Number.POSITIVE_INFINITY]) {
+      expect(() => new ReplayRunner({ maxRepairsPerRun: Number.POSITIVE_INFINITY, runBudgetMs: budget })).toThrow(
+        /needs a finite, positive runBudgetMs/,
+      );
+    }
+    expect(() => new ReplayRunner({ maxRepairsPerRun: 2, runBudgetMs: 0 })).not.toThrow();
+  });
 
   it("the matrix defaults to uncapped, and accepts a number or none", () => {
     expect(parseArgs([]).maxRepairsPerRun).toBe(Number.POSITIVE_INFINITY);
     expect(parseArgs(["--max-repairs-per-run", "6"]).maxRepairsPerRun).toBe(6);
     expect(parseArgs(["--max-repairs-per-run", "none"]).maxRepairsPerRun).toBe(Number.POSITIVE_INFINITY);
-    expect(() => parseArgs(["--max-repairs-per-run", "-1"])).toThrow(/non-negative/);
+    for (const bad of ["-1", "", " ", "0x2", "1e1", "2.5", "None"]) {
+      expect(() => parseArgs(["--max-repairs-per-run", bad]), JSON.stringify(bad)).toThrow(/non-negative/);
+    }
   });
 });

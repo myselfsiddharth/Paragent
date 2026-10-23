@@ -219,7 +219,7 @@ model and effort that produced it is not reproducible.
 3. **`maxRepairsPerRun` default 2 in `ReplayRunner`; the gate matrix runs uncapped (ADR-0027).**
    `gate:matrix` passes `Infinity` unless `--max-repairs-per-run` says otherwise, so a run repairs
    until the task finishes or `wall_clock_budget_ms` runs out, and a step stops early only when
-   the model re-proposes a sequence it already tried there. Run rows record `repair_cap` (null =
+   the model re-proposes a sequence that already failed there while the page is unchanged. Run rows record `repair_cap` (null =
    uncapped). The rest of this invariant holds for any finite cap: the budget is per run, not per
    step. `repairCount` is one counter for the whole `run()` call, not reset between steps — a step
    that enters repair with
