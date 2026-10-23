@@ -261,8 +261,9 @@ export function writeCacheRow(
     );
   }
   if (poolRow.pool_eligible && failClosed) {
+    const check = taintChecker(options);
     for (const loc of allLocators(poolRow)) {
-      const t = taintChecker(options)(loc);
+      const t = check(loc);
       if (t.tainted) {
         throw new CacheWriteRejectedError(
           `pool write refused: locator still tainted (${t.rulesFired.join(",")})`,

@@ -143,7 +143,7 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 2,
-          "description": "Pre-actions this step ran before its own action (ADR-0024, #213): recorded ones on a first pass, the repair's own on a REPAIRED_PASS. Absent when none ran. Lets §9 separate steps that passed by inserting an action from steps that did not."
+          "description": "Pre-actions this step ran before its own action (ADR-0024, #213): recorded ones on a first pass; on a REPAIRED_PASS, the recorded ones kept from the first pass plus the repair's own, matching the rewritten row. Absent when none ran. Lets §9 separate steps that passed by inserting an action from steps that did not."
         },
         "recorded_at": {
           "type": "string",

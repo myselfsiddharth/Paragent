@@ -136,10 +136,18 @@ export function recordStepOutcome(
   // at least described a real control. Refuse instead, and leave the previous
   // version standing — the step's failure is already in the metrics, which is
   // where a failure belongs.
+  // ADR-0024: the same holds for each pre-action, and independently of the
+  // corrected action, which may legitimately have no locators (`press`).
+  const strippedPre = (ctx.repair?.pre_actions ?? []).some(
+    (a, i) =>
+      a.locator_fallback_chain.length > 0 &&
+      (row.pre_actions?.[i]?.locator_fallback_chain.length ?? 0) === 0,
+  );
   if (
     kind === "repaired" &&
-    (ctx.repair?.corrected_action.locator_fallback_chain.length ?? 0) > 0 &&
-    row.compiled_action.locator_fallback_chain.length === 0
+    (((ctx.repair?.corrected_action.locator_fallback_chain.length ?? 0) > 0 &&
+      row.compiled_action.locator_fallback_chain.length === 0) ||
+      strippedPre)
   ) {
     throw new CacheWriteRejectedError(
       `repair rewrite refused: ${emptyChainCause(row)}, leaving an action that ` +

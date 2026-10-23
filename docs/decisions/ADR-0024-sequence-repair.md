@@ -59,7 +59,8 @@ longer than 2. This is the posture `sanitizeProposedAction` already takes.
 When a step fails, its recorded pre-actions that ran before the failure stay, because they already
 acted on the page. The retry runs only the proposal's actions. A passing repair is persisted as the
 kept pre-actions, then the proposal's pre-actions, then its corrected action. If that adds up to
-more than 2 pre-actions, the attempt ends `REPAIR_EXHAUSTED` with that reason.
+more than 2 pre-actions, that attempt is spent with that reason, and the next attempt (if any)
+proceeds. The model is not told how many recorded pre-actions are kept.
 
 A repair that reports an **empty** list clears the row's pre-actions. That is how a later version
 that drops the modal is healed. A report without the field (any caller that predates this ADR)
@@ -71,7 +72,8 @@ A sequence is **one repair** (one proposal, one attempt, one `repair_count`) and
 step**. That decision moves the gate number, so it is made visible instead of silent:
 
 - Step metric rows gain `pre_action_count` (1–2, absent when none ran). It is set on a first pass
-  that ran recorded pre-actions, and on a `REPAIRED_PASS` that ran the repair's own.
+  that ran recorded pre-actions, and on a `REPAIRED_PASS` to the kept recorded ones plus the
+  repair's own, the same count the rewritten row records.
 - The §9 report gains `repair_shape`, beside `truncation` and `cost_provenance`: how many repaired
   steps inserted an action, and how many first-pass-valid steps ran inserted actions.
 
@@ -143,5 +145,9 @@ before.
 - **Actions from failed attempts are not persisted.** If attempt 2 passes only because attempt 1's
   action changed the page, the stored sequence lacks it, and the next replay repairs again. This is
   measured, not hidden: it shows up as another repair.
+- **A stored pre-action that fails.** The egress still reports the step's own action as the one
+  that failed, and a dialog that appears only on some runs makes the row gain and lose its
+  pre-action on alternate runs. The fix is skippable pre-actions plus a `failed_action` field in
+  the egress: [#228](https://github.com/myselfsiddharth/Paragent/issues/228).
 - **Task intent in the egress.** It is needed for any repair that has to *choose* (a data source,
   an audience) rather than find. It is not decided here.

@@ -82,13 +82,17 @@ function program(step: Partial<CompiledStep> = {}): CompiledProgram {
   };
 }
 
-/** Proposes a fixed answer and records what it was asked. */
+/** Proposes fixed answers in turn (the last repeats) and records what it was asked. */
 class ScriptedRepair implements RepairModelClient {
   readonly seen: RepairContext[] = [];
-  constructor(private readonly answer: Partial<RepairProposal>) {}
+  private readonly answers: Partial<RepairProposal>[];
+  constructor(...answers: Partial<RepairProposal>[]) {
+    this.answers = answers.length > 0 ? answers : [{}];
+  }
   async propose(ctx: RepairContext): Promise<RepairProposal> {
     this.seen.push(ctx);
-    return { corrected_action: null, tokens_in: 10, tokens_out: 5, ...this.answer };
+    const answer = this.answers[Math.min(this.seen.length - 1, this.answers.length - 1)];
+    return { corrected_action: null, tokens_in: 10, tokens_out: 5, ...answer };
   }
 }
 
@@ -243,6 +247,22 @@ describe("replay with pre-actions (live page)", () => {
 
     expect(result.step_results[0]?.outcome).toBe("REPAIRED_PASS");
     expect(observed[0]?.repair?.pre_actions).toEqual([CHOOSE_DS, click("Got it")]);
+    // The metric counts what the step needed in this run, kept and proposed:
+    // the same count the rewritten row records (review of #223).
+    expect(result.step_results[0]?.pre_action_count).toBe(2);
+  }, 30_000);
+
+  it("an over-bound proposal spends one attempt, not the step", async () => {
+    // Review of #223: this used to end the repair loop outright.
+    await page.setContent(EDITOR + MODAL);
+    const repair = new ScriptedRepair(
+      { corrected_action: CHANGE_VIZ, pre_actions: [click("x"), click("y")] },
+      { corrected_action: CHANGE_VIZ },
+    );
+    const result = await new ReplayRunner({ page, repairClient: repair, maxRepairsPerRun: 2 })
+      .run(program({ pre_actions: [CHOOSE_DS], compiled_action: click("Missing") }));
+    expect(repair.seen).toHaveLength(2);
+    expect(result.step_results[0]).toMatchObject({ outcome: "REPAIRED_PASS", repair_attempt: 2 });
   }, 30_000);
 
   it("refuses a repair that would take the step past the bound", async () => {
@@ -271,6 +291,20 @@ describe("pre-actions survive the program adapters and declare their params", ()
       "v",
     );
     expect(p.steps[0]?.pre_actions).toEqual([CHOOSE_DS]);
+  });
+
+  it("refuses a program whose pre-actions break the rule a repair is held to", () => {
+    // Review of #223: validated at load, not discovered mid-run.
+    const rows = (pre: unknown) => ({
+      program_id: "p",
+      site_key: "s",
+      task_key: "t",
+      rows: [{ step_index: 0, pre_actions: pre, compiled_action: CHANGE_VIZ, assertion: PICKER_OPEN }],
+    });
+    expect(() => rowsToProgram(rows([CHOOSE_DS, CHOOSE_DS, CHOOSE_DS]), "v")).toThrow(/max 2/);
+    expect(() => rowsToProgram(rows([{ type: "click" }]), "v")).toThrow(/pre_actions\[0\]/);
+    expect(() => rowsToProgram(rows("click it"), "v")).toThrow(/not an array/);
+    expect(rowsToProgram(rows(undefined), "v").steps[0]?.pre_actions).toBeUndefined();
   });
 
   it("a pre-action's param slots are required before the run starts", () => {

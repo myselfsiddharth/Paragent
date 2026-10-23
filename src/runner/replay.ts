@@ -437,6 +437,9 @@ export class ReplayRunner {
           // again, and the repaired step keeps them in front of the repair's.
           const keptPre = (step.pre_actions ?? []).slice(0, first.pre_action_count ?? 0);
           if (keptPre.length + proposedPre.length > MAX_PRE_ACTIONS) {
+            // Spends this attempt, not the step: the model is not told how
+            // many recorded pre-actions are kept, so an in-bound-looking
+            // proposal can overrun, and a later attempt may not.
             final = {
               step_index: step.step_index,
               outcome: "REPAIR_EXHAUSTED",
@@ -450,7 +453,8 @@ export class ReplayRunner {
                 `repair would give step ${step.step_index} ` +
                 `${keptPre.length + proposedPre.length} pre-actions (max ${MAX_PRE_ACTIONS})`,
             };
-            break;
+            lastMessage = final.error_message;
+            continue;
           }
           const retry = await this.attemptStep({
             program,
@@ -483,9 +487,11 @@ export class ReplayRunner {
               time_to_repair_ms: timeToRepair,
               assertion_strength: step.assertion.strength,
             };
-            if (retry.pre_action_count !== undefined) {
-              final.pre_action_count = retry.pre_action_count;
-            }
+            // Every pre-action this step needed in this run: the kept recorded
+            // ones (ran on the first pass) and the repair's (ran on the
+            // retry). The same count the rewritten row records.
+            const preRan = keptPre.length + (retry.pre_action_count ?? 0);
+            if (preRan > 0) final.pre_action_count = preRan;
             break;
           }
 

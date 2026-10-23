@@ -189,6 +189,29 @@ describe("canary: a repair's pre-actions go through the same boundary (ADR-0024)
     expect(findCanariesIn(JSON.stringify(store.allWrites()))).toEqual([]);
   });
 
+  it("refuses a tainted pre-action even when the corrected action has no locators", () => {
+    // Review of #223: the refusal only checked compiled_action's chain, so a
+    // `press` with a stripped pre-action was persisted as a dead row.
+    const store = new MemoryCacheStore();
+    store.write(pooledRow());
+    expect(() =>
+      recordStepOutcome(
+        {
+          ...KEY,
+          outcome: "REPAIRED_PASS",
+          repair: {
+            run_id: "run-1",
+            repair_attempt: 1,
+            corrected_action: { type: "press", key: "Enter", locator_fallback_chain: [] },
+            pre_actions: [taintedRepair().corrected_action],
+          },
+        },
+        { store, now: () => NOW },
+      ),
+    ).toThrow(CacheWriteRejectedError);
+    expect(store.allWrites()).toHaveLength(1);
+  });
+
   it("strips a pre-action's tainted locators and keeps its clean ones", () => {
     const store = new MemoryCacheStore();
     store.write(pooledRow());
