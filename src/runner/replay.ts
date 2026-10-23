@@ -20,6 +20,7 @@ import type { ProgramSource } from "../metrics/types.js";
 import { executeAction, NETWORK_IDLE_WAIT_MS } from "./actions.js";
 import { evaluateAssertion } from "./assertions.js";
 import { capturePageState, emptyPageState } from "./page-state.js";
+import { visibleControlKeys } from "../shared/controls.js";
 import {
   DEFAULT_CONTEXT_LEVEL,
   type ContextLevel,
@@ -704,6 +705,13 @@ export class ReplayRunner {
 
     let preCompleted = 0;
     const { result, wall_clock_ms } = await measureWallClock(async () => {
+      // ADR-0026: before the first action, so the count is of what this
+      // attempt's actions made appear. A failed capture leaves it undefined,
+      // and the assertion then fails saying so rather than passing blind.
+      const controlsBefore =
+        step.assertion.type === "controls-appeared"
+          ? await visibleControlKeys(this.page!).catch(() => undefined)
+          : undefined;
       // A pre-action that fails fails the step, with its own outcome: the
       // repair loop then sees exactly which part of the sequence broke, and
       // `preCompleted` says how much of it already acted on the page.
@@ -738,7 +746,10 @@ export class ReplayRunner {
         this.page!,
         step.assertion,
         params,
-        actionResult.target ? { actionTarget: actionResult.target } : {},
+        {
+          ...(actionResult.target ? { actionTarget: actionResult.target } : {}),
+          ...(controlsBefore ? { controlsBefore } : {}),
+        },
       );
       return {
         outcome: assertionResult.outcome,

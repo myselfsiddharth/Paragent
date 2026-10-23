@@ -428,6 +428,53 @@ describe("click assertion target", () => {
     // own field is not a pattern we have observed, so do not invent a rule.
     expect(assertion.expected?.visible).not.toBe(false);
   });
+
+  // ADR-0026 (#224)
+  describe("a click that revealed controls asserts that, not that it stayed visible", () => {
+    const compile = (over: Record<string, unknown>) =>
+      compileTrajectory(
+        wrap({ ...clickStep("http://{host}:{port}/app", "http://{host}:{port}/app"), ...over }),
+        { compiledAt: "2026-07-25T00:00:00.000Z" },
+      ).rows[0]!.assertion;
+
+    it("emits a weak controls-appeared with no target and no page text", () => {
+      const assertion = compile({ post_action_target_visible: true, controls_appeared: 7 });
+      expect(assertion.type).toBe("controls-appeared");
+      expect(assertion.strength).toBe("weak");
+      expect(assertion.expected).toEqual({ count: 1 });
+      expect(assertion.target).toBeUndefined();
+    });
+
+    it("keeps the old check when the recording saw nothing appear, or could not tell", () => {
+      for (const over of [{ controls_appeared: 0 }, {}]) {
+        const assertion = compile({ post_action_target_visible: true, ...over });
+        expect(assertion.type).toBe("element-visible");
+        expect(assertion.expected?.visible).toBe(true);
+      }
+    });
+
+    it("leaves the disappearing-control check (ADR-0007) and fills alone", () => {
+      expect(compile({ post_action_target_visible: false, controls_appeared: 4 }).expected?.visible).toBe(false);
+      const fill = compile({
+        action: { type: "fill", param_refs: ["q"] },
+        post_action_target_visible: true,
+        controls_appeared: 4,
+      });
+      expect(fill.type).toBe("element-visible");
+    });
+
+    it("prefers the destination when the click navigated", () => {
+      const assertion = compileTrajectory(
+        wrap({
+          ...clickStep("http://{host}:{port}/app", "http://{host}:{port}/app#home"),
+          post_action_target_visible: true,
+          controls_appeared: 4,
+        }),
+        { compiledAt: "2026-07-25T00:00:00.000Z" },
+      ).rows[0]!.assertion;
+      expect(assertion.type).toBe("url-matches");
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

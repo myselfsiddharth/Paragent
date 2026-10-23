@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import type { Locator, Page } from "playwright";
+import { countAppeared, visibleControlKeys } from "../shared/controls.js";
 import { captureFingerprint } from "./fingerprint.js";
 import { collectLocatorCandidates } from "./locators.js";
 import {
@@ -43,12 +44,41 @@ export const RECORDER_VERSION = "0.1.0-b2" as const;
  */
 export const POST_ACTION_URL_SETTLE_MS = 1_000;
 
-/** Poll until the URL differs from `before`, or the budget runs out. */
-async function settleUrl(page: Page, before: string): Promise<void> {
-  const deadline = Date.now() + POST_ACTION_URL_SETTLE_MS;
-  while (Date.now() < deadline) {
-    if (page.url() !== before) return;
+/**
+ * Once the URL has moved, how long it must stay put before `post_state` is
+ * taken.
+ *
+ * Returning on the *first* change was not enough (#224, measured on 9.5.21):
+ * after Save, Grafana routes to `/d/{uid}/{slug}` and then rewrites it to
+ * `/d/{uid}/{slug}?orgId=1`. A recording that caught the first URL taught the
+ * compiler, through ADR-0022's state-bearing rule, that `orgId` must be
+ * *absent* there, and every replay on the recording version failed that step.
+ */
+export const POST_ACTION_URL_QUIET_MS = 300;
+
+/**
+ * Poll until the URL differs from `before` and then stops moving for
+ * `POST_ACTION_URL_QUIET_MS`, each phase bounded by `POST_ACTION_URL_SETTLE_MS`.
+ * A URL that never moves returns after the first budget, exactly as before.
+ */
+export async function settleUrl(page: Page, before: string): Promise<void> {
+  const firstDeadline = Date.now() + POST_ACTION_URL_SETTLE_MS;
+  while (page.url() === before) {
+    if (Date.now() >= firstDeadline) return;
     await page.waitForTimeout(50);
+  }
+  const deadline = Date.now() + POST_ACTION_URL_SETTLE_MS;
+  let last = page.url();
+  let stableSince = Date.now();
+  while (Date.now() < deadline) {
+    await page.waitForTimeout(50);
+    const now = page.url();
+    if (now !== last) {
+      last = now;
+      stableSince = Date.now();
+    } else if (Date.now() - stableSince >= POST_ACTION_URL_QUIET_MS) {
+      return;
+    }
   }
 }
 
@@ -104,6 +134,9 @@ export class TrajectoryRecorder {
   }): Promise<void> {
     const started = this.offsetMs();
     const pre_state = await this.fingerprint(false);
+    // ADR-0026: which controls were visible before the action, in memory only.
+    // A failed capture records nothing: "could not tell" is never "none".
+    const controlsBefore = await visibleControlKeys(this.page).catch(() => undefined);
     const urlBefore = this.page.url();
     const locator_candidates = args.locator
       ? await collectLocatorCandidates(args.locator)
@@ -136,6 +169,9 @@ export class TrajectoryRecorder {
     await settleUrl(this.page, urlBefore);
 
     const post_state = await this.fingerprint(args.awaitNetworkIdle ?? true);
+    const controlsAfter = controlsBefore
+      ? await visibleControlKeys(this.page).catch(() => undefined)
+      : undefined;
     const duration_ms = Math.max(0, this.offsetMs() - started);
     const step: Step = {
       step_index: this.stepIndex++,
@@ -149,6 +185,11 @@ export class TrajectoryRecorder {
     if (args.assertion_hint) step.assertion_hint = args.assertion_hint;
     if (post_action_target_visible !== undefined) {
       step.post_action_target_visible = post_action_target_visible;
+    }
+    // A count, never the names: the trajectory records that the step revealed
+    // something, not what the page said.
+    if (controlsBefore && controlsAfter) {
+      step.controls_appeared = countAppeared(controlsBefore, controlsAfter);
     }
     this.steps.push(step);
   }

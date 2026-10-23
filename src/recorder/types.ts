@@ -97,6 +97,12 @@ export interface Step {
   assertion_hint?: AssertionHint;
   /** ADR-0007. Absent when the step acted through no locator. */
   post_action_target_visible?: boolean;
+  /**
+   * ADR-0026. How many controls (role + accessible name) were visible after
+   * the action that were not before it. A count only: the names are never
+   * persisted. Absent when the capture failed, never guessed as 0.
+   */
+  controls_appeared?: number;
 }
 
 export interface Trajectory {

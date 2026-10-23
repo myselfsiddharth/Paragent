@@ -60,6 +60,7 @@ export type ActionType =
 
 export type AssertionType =
   | "element-visible"
+  | "controls-appeared"
   | "text-matches"
   | "url-matches"
   | "count-equals"
@@ -147,6 +148,8 @@ export interface TrajectoryStep {
   assertion_hint?: AssertionHint;
   /** ADR-0007. Absent when the step acted through no locator. */
   post_action_target_visible?: boolean;
+  /** ADR-0026. Controls visible after the action that were not before. Count only. */
+  controls_appeared?: number;
 }
 
 export interface Trajectory {

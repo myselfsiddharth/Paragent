@@ -26,12 +26,14 @@
       "type": "string",
       "enum": [
         "element-visible",
+        "controls-appeared",
         "text-matches",
         "url-matches",
         "count-equals",
         "network-idle",
         "custom"
-      ]
+      ],
+      "description": "controls-appeared (ADR-0026): at least expected.count controls (role + accessible name) are visible after the step's actions that were not visible before them. No target and no page text: the check is a count."
     },
     "strength": {
       "type": "string",

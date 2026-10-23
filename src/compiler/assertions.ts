@@ -277,6 +277,40 @@ export function synthesizeAssertion(
    * non-navigating variant is caught directly by the branch above rather than
    * inferred from the URL.
    */
+  /**
+   * ADR-0026 (#224): a click whose control stays on screen and that revealed
+   * new controls when recorded. The old check here, "the clicked control is
+   * still visible", describes the recording version's layout, not the step's
+   * purpose: on Grafana 10.0.13 the visualization toggle disappears once the
+   * picker opens, so the check was false while the step did exactly its job,
+   * and frozen under repair, so nothing could pass it.
+   *
+   * What the step is for is to reveal something, and the recording observed
+   * that it did. So assert that: at least one control appears. It is a count,
+   * so a renamed control cannot break it and no page text enters the row.
+   * Weak, honestly: a wrong menu opening passes too. What it rules out is the
+   * click doing nothing, which the old check could not.
+   */
+  if (
+    wantsElement &&
+    !clickChangedUrl &&
+    step.post_action_target_visible === true &&
+    (step.controls_appeared ?? 0) > 0 &&
+    ["click", "check", "uncheck", "press"].includes(step.action.type)
+  ) {
+    return {
+      schema_version: SCHEMA_VERSION,
+      assertion_id: assertionId,
+      type: "controls-appeared",
+      strength: "weak",
+      expected: { count: 1 },
+      timeout_ms,
+      failure_classification: "assertion_failed",
+      notes:
+        `Recorder observed ${step.controls_appeared} new control(s) after the action (ADR-0026). Asserts at least one appears: the step revealed something. Weak: a wrong surface opening also passes; rules out a no-op.`,
+    };
+  }
+
   if (wantsElement && !clickChangedUrl) {
     const landmarkPick =
       pickPreferredLandmark(newLandmarks(step)) ??

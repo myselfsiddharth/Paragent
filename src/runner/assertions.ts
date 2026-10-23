@@ -6,6 +6,7 @@
 
 import type { Locator, Page } from "playwright";
 import type { StepOutcome } from "../metrics/types.js";
+import { countAppeared, visibleControlKeys } from "../shared/controls.js";
 import { LocatorNotFoundError, resolveLocator } from "./locators.js";
 import { interpolate } from "./templates.js";
 import type { Assertion, ParamBindings } from "./types.js";
@@ -54,7 +55,16 @@ const URL_POLL_INTERVAL_MS = 100;
 export interface EvaluateAssertionOptions {
   /** The locator the step's action resolved (`ActionResult.target`), for `locator_ref: "action_target"`. */
   actionTarget?: Locator;
+  /**
+   * ADR-0026: the controls visible before the step's actions ran, for
+   * `controls-appeared`. Taken by the runner before the first action, so the
+   * count is of what the step's actions made appear.
+   */
+  controlsBefore?: ReadonlySet<string>;
 }
+
+/** How often `controls-appeared` re-reads the page while waiting. */
+const CONTROLS_POLL_INTERVAL_MS = 150;
 
 export async function evaluateAssertion(
   page: Page,
@@ -235,6 +245,33 @@ export async function evaluateAssertion(
       case "network-idle": {
         await page.waitForLoadState("networkidle", { timeout });
         return { outcome: "PASS" };
+      }
+
+      case "controls-appeared": {
+        // ADR-0026: the step revealed something. A count of new role + name
+        // pairs, so a renamed or restyled control cannot break it, and no
+        // page text is in the assertion. Weak by construction: a wrong menu
+        // opening also passes. What it rules out is a click that did nothing.
+        const before = options.controlsBefore;
+        if (!before) {
+          return {
+            outcome: "ASSERTION_FAILED",
+            message: "controls-appeared needs the controls visible before the action; none were captured",
+          };
+        }
+        const want = Math.max(1, assertion.expected?.count ?? 1);
+        const deadline = Date.now() + timeout;
+        let seen = 0;
+        for (;;) {
+          seen = countAppeared(before, await visibleControlKeys(page));
+          if (seen >= want) return { outcome: "PASS" };
+          if (Date.now() >= deadline) break;
+          await page.waitForTimeout(CONTROLS_POLL_INTERVAL_MS);
+        }
+        return {
+          outcome: classificationToOutcome(assertion),
+          message: `expected at least ${want} new control(s) after the action, saw ${seen}`,
+        };
       }
 
       case "custom": {

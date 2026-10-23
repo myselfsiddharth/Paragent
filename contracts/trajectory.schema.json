@@ -297,6 +297,11 @@
         "post_action_target_visible": {
           "type": "boolean",
           "description": "ADR-0007. Whether the element this step acted on was still visible immediately after the action, observed with Playwright's isVisible() — the same definition the runner later asserts with. Omitted when the step acted through no locator (navigate, wait). A false value lets the compiler assert the control disappeared instead of wrongly asserting it is still visible."
+        },
+        "controls_appeared": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "ADR-0026 (#224). How many controls (role + accessible name, the repair context's own capture) were visible after the action that were not visible before it. A count only: no name is recorded. Omitted when either capture failed, never guessed as 0. Lets the compiler assert that a click revealed something, instead of the version-specific 'the clicked control is still visible'."
         }
       }
     }
