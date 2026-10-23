@@ -183,6 +183,12 @@ a licence to touch the assertion.
 tested. What would be lost is the reason: the measurement above would have to be
 re-run to re-justify a change.
 
+## Later amendments
+
+- [ADR-0021](ADR-0021-first-live-replay-corrections.md), [ADR-0023](ADR-0023-dialog-first-context.md): what the `interactive` capture contains.
+- [ADR-0025](ADR-0025-repair-task-goal.md): the egress carries the task goal.
+- [ADR-0028](ADR-0028-fill-repair-binding.md): the egress carries a fill step's slot names, never values.
+
 ## Open questions / what I could not verify
 
 - **Whether a model actually repairs better at `interactive` than at

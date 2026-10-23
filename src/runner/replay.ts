@@ -193,6 +193,25 @@ function isFailureOutcome(outcome: StepOutcome): boolean {
 }
 
 /**
+ * A corrected fill or select types the step's OWN value (ADR-0028).
+ *
+ * The value is the caller's binding for the step's slots, never the model's
+ * choice: the model chooses where to type, not what. Before this, a corrected
+ * fill carried no `param_refs` (the model was never shown them), and every
+ * fill repair failed with "fill missing bound param value": in the first
+ * glm-5-3 matrix, all 36 runs on 10.0.13 to 12.2.1 stopped at step 6 that way.
+ * Any `param_refs` the model proposed are replaced, so it cannot rebind a step
+ * to another slot. Other action types are returned unchanged.
+ */
+function withStepBinding(proposed: CompiledAction, own: CompiledAction): CompiledAction {
+  if (proposed.type !== "fill" && proposed.type !== "select") return proposed;
+  const { param_refs: _ignored, ...rest } = proposed;
+  return own.param_refs !== undefined && own.param_refs.length > 0
+    ? { ...rest, param_refs: [...own.param_refs] }
+    : rest;
+}
+
+/**
  * A repair sequence's identity for the repeat guard: key order and field
  * presence normalised, so the same actions re-sent with keys reordered are
  * still recognised as the same.
@@ -525,7 +544,7 @@ export class ReplayRunner {
             break;
           }
 
-          const currentAction = proposal.corrected_action;
+          const currentAction = withStepBinding(proposal.corrected_action, step.compiled_action);
           const proposedPre = proposal.pre_actions ?? [];
           const proposalKey = sequenceKey(proposedPre, currentAction);
           if (guardRepeats && failedOn.has(proposalKey)) {

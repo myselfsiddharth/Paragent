@@ -104,7 +104,12 @@ describe("repair egress: only the authorized shape leaves (#125)", () => {
       unknown
     >;
     expect(out["params"]).toBeUndefined();
-    expect(payload).not.toContain("password");
+    // ADR-0028: a fill step's slot NAMES cross, in step.param_slots and nowhere
+    // else; the bag itself and every value in it never do.
+    const step = out["step"] as { param_slots?: string[] };
+    expect(step.param_slots).toEqual(["password"]);
+    const { param_slots: _names, ...stepWithoutSlots } = step;
+    expect(JSON.stringify({ ...out, step: stepWithoutSlots })).not.toContain("password");
   });
 
   it("excludes the assertion's expected value, keeping only type and strength", () => {
@@ -161,7 +166,10 @@ describe("delegation does not widen the boundary (#189)", () => {
     for (const [label, value] of Object.entries(CANARY)) {
       expect(sent, `delegated payload carried ${label}`).not.toContain(value);
     }
-    expect(sent).not.toContain("password");
+    // ADR-0028: the slot name, only where the allowlist puts it.
+    const parsed = JSON.parse(sent) as { step: { param_slots?: string[] } };
+    expect(parsed.step.param_slots).toEqual(["password"]);
+    expect(sent.split("password").length - 1).toBe(1);
     // Counter-check, same as above: the payload is non-empty.
     expect(sent).toContain("127.0.0.1");
   });
@@ -278,5 +286,25 @@ describe("repair egress: the task goal (ADR-0025)", () => {
     expect((thrown as Error).message).toContain('"password"');
     expect((thrown as Error).message).not.toContain(CANARY.paramSecret);
     expect(metrics.getRows()).toHaveLength(0);
+  });
+});
+
+/**
+ * ADR-0028: fill/select steps send the names of the slots they type into, so
+ * the model can tell the title field from the alias field. Names only.
+ */
+describe("repair egress: fill slot names (ADR-0028)", () => {
+  it("carries the step's slot names, never a bound value", () => {
+    const out = serializeRepairContext(contextWithEverything());
+    expect(out.step.param_slots).toEqual(["password"]);
+    for (const value of Object.values(CANARY)) {
+      expect(JSON.stringify(out)).not.toContain(value);
+    }
+  });
+
+  it("omits the field for a step that types nothing", () => {
+    const ctx = contextWithEverything();
+    const click = { ...ctx, step: { ...ctx.step, compiled_action: { type: "click", locator_fallback_chain: [] } } };
+    expect("param_slots" in serializeRepairContext(click as unknown as RepairContext).step).toBe(false);
   });
 });
