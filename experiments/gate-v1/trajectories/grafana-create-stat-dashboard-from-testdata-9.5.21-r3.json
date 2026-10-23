@@ -3,7 +3,7 @@
   "trajectory_id": "traj-gate-live-create-stat-dashboard-from-testdata-9.5.21",
   "site_key": "grafana-oss@9.5.21",
   "task_key": "create-stat-dashboard-from-testdata",
-  "recorded_at": "2026-10-23T01:42:51.127Z",
+  "recorded_at": "2026-10-23T02:01:12.711Z",
   "base_url_template": "http://{host}:{port}",
   "provenance": {
     "recorder": "0.1.0-b2",
@@ -57,16 +57,15 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 1,
-        "duration_ms": 636
+        "started_offset_ms": 0,
+        "duration_ms": 641
       },
       "assertion_hint": {
         "suggested_type": "url-matches",
         "observed_signals": [
           "navigation completed"
         ]
-      },
-      "controls_appeared": 10
+      }
     },
     {
       "step_index": 1,
@@ -123,8 +122,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 638,
-        "duration_ms": 556
+        "started_offset_ms": 641,
+        "duration_ms": 862
       },
       "assertion_hint": {
         "suggested_type": "element-visible",
@@ -195,8 +194,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 1195,
-        "duration_ms": 1097
+        "started_offset_ms": 1504,
+        "duration_ms": 1414
       },
       "assertion_hint": {
         "suggested_type": "element-visible",
@@ -260,8 +259,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 2293,
-        "duration_ms": 1144
+        "started_offset_ms": 2918,
+        "duration_ms": 1461
       },
       "assertion_hint": {
         "suggested_type": "element-visible",
@@ -335,8 +334,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 3437,
-        "duration_ms": 1088
+        "started_offset_ms": 4379,
+        "duration_ms": 1069
       },
       "assertion_hint": {
         "suggested_type": "element-value-bound",
@@ -344,8 +343,7 @@
           "param slot series_alias filled"
         ]
       },
-      "post_action_target_visible": true,
-      "controls_appeared": 0
+      "post_action_target_visible": true
     },
     {
       "step_index": 5,
@@ -403,8 +401,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 4525,
-        "duration_ms": 1084
+        "started_offset_ms": 5449,
+        "duration_ms": 1062
       },
       "assertion_hint": {
         "suggested_type": "element-value-bound",
@@ -412,8 +410,7 @@
           "param slot series_count filled"
         ]
       },
-      "post_action_target_visible": true,
-      "controls_appeared": 0
+      "post_action_target_visible": true
     },
     {
       "step_index": 6,
@@ -459,8 +456,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 5609,
-        "duration_ms": 1077
+        "started_offset_ms": 6511,
+        "duration_ms": 1071
       },
       "assertion_hint": {
         "suggested_type": "element-value-bound",
@@ -468,8 +465,7 @@
           "param slot panel_title filled"
         ]
       },
-      "post_action_target_visible": true,
-      "controls_appeared": 0
+      "post_action_target_visible": true
     },
     {
       "step_index": 7,
@@ -520,8 +516,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 6686,
-        "duration_ms": 371
+        "started_offset_ms": 7582,
+        "duration_ms": 706
       },
       "assertion_hint": {
         "suggested_type": "element-visible",
@@ -583,8 +579,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 7057,
-        "duration_ms": 1083
+        "started_offset_ms": 8289,
+        "duration_ms": 1377
       },
       "assertion_hint": {
         "suggested_type": "element-visible",
@@ -650,8 +646,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 8140,
-        "duration_ms": 1062
+        "started_offset_ms": 9666,
+        "duration_ms": 1048
       },
       "assertion_hint": {
         "suggested_type": "element-value-bound",
@@ -659,8 +655,7 @@
           "param slot dashboard_title filled"
         ]
       },
-      "post_action_target_visible": true,
-      "controls_appeared": 0
+      "post_action_target_visible": true
     },
     {
       "step_index": 10,
@@ -725,8 +720,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 9202,
-        "duration_ms": 465
+        "started_offset_ms": 10714,
+        "duration_ms": 762
       },
       "assertion_hint": {
         "suggested_type": "element-visible",
@@ -735,7 +730,7 @@
         ]
       },
       "post_action_target_visible": true,
-      "controls_appeared": 20
+      "controls_appeared": 3
     },
     {
       "step_index": 11,
@@ -792,8 +787,8 @@
         "network_idle": true
       },
       "timing_ms": {
-        "started_offset_ms": 9668,
-        "duration_ms": 349
+        "started_offset_ms": 11477,
+        "duration_ms": 662
       },
       "assertion_hint": {
         "suggested_type": "element-visible",

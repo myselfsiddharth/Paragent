@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
 import type { Locator, Page } from "playwright";
-import { countAppeared, visibleControlKeys } from "../shared/controls.js";
+import { countAppeared, settledControlKeys, visibleControlKeys } from "../shared/controls.js";
 import { captureFingerprint } from "./fingerprint.js";
 import { collectLocatorCandidates } from "./locators.js";
 import {
@@ -135,8 +135,11 @@ export class TrajectoryRecorder {
     const started = this.offsetMs();
     const pre_state = await this.fingerprint(false);
     // ADR-0026: which controls were visible before the action, in memory only.
+    // Only for click-like steps, the only ones the compiler reads it for.
     // A failed capture records nothing: "could not tell" is never "none".
-    const controlsBefore = await visibleControlKeys(this.page).catch(() => undefined);
+    const controlsBefore = ["click", "check", "uncheck", "press"].includes(args.action.type)
+      ? await settledControlKeys(this.page).catch(() => undefined)
+      : undefined;
     const urlBefore = this.page.url();
     const locator_candidates = args.locator
       ? await collectLocatorCandidates(args.locator)

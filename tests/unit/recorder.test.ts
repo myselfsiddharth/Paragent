@@ -149,9 +149,13 @@ describe("recorder package", () => {
       expect(loginClick).toBeDefined();
       expect(loginClick!.post_state.visible_landmarks).not.toContain("form");
       // ADR-0026: the login click revealed the app's controls, recorded as a
-      // count. Every step carries one, and only a number: never the names.
+      // count, never the names. Only click-like steps carry one: nothing else
+      // is read by the compiler, so nothing else pays for two captures.
       expect(loginClick!.controls_appeared).toBeGreaterThan(0);
-      for (const s of traj.steps) expect(typeof s.controls_appeared).toBe("number");
+      for (const s of traj.steps) {
+        const clickLike = ["click", "check", "uncheck", "press"].includes(s.action.type);
+        expect(typeof s.controls_appeared).toBe(clickLike ? "number" : "undefined");
+      }
       const fillStep = traj.steps.find((s) => s.action.type === "fill");
       expect(fillStep?.locator_candidates.length).toBeGreaterThanOrEqual(2);
       expect(fillStep?.locator_candidates[0]?.strategy).toBe("role_name");

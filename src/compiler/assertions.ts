@@ -130,6 +130,9 @@ interface SynthesisContext {
   locatorChain: CompiledLocator[];
 }
 
+/** Actions whose purpose is a page change, not a value: ADR-0007's and ADR-0026's branches. */
+const CLICK_LIKE_ACTIONS: readonly string[] = ["click", "check", "uncheck", "press"];
+
 /** Synthesize one post-condition; expected values are templates with typed holes. */
 export function synthesizeAssertion(
   ctx: SynthesisContext,
@@ -247,7 +250,7 @@ export function synthesizeAssertion(
     step.post_action_target_visible === false &&
     primary !== undefined &&
     !clickChangedUrl &&
-    ["click", "check", "uncheck", "press"].includes(step.action.type)
+    CLICK_LIKE_ACTIONS.includes(step.action.type)
   ) {
     return {
       schema_version: SCHEMA_VERSION,
@@ -263,20 +266,6 @@ export function synthesizeAssertion(
     };
   }
 
-  /**
-   * Asserting the clicked control is still visible is frequently *false*: the
-   * transition routinely hides the surface the control lived on (submitting a
-   * login form, closing a modal, navigating away).
-   *
-   * Falling through to `url-matches` is both correct and stronger: the branch
-   * below labels a URL-changing click `strong`.
-   *
-   * Caught by tests/integration/pipeline.test.ts, which replayed a compiled
-   * login step against the fixture and timed out waiting for the submit button
-   * to stay visible after it had been clicked. Since ADR-0007 the
-   * non-navigating variant is caught directly by the branch above rather than
-   * inferred from the URL.
-   */
   /**
    * ADR-0026 (#224): a click whose control stays on screen and that revealed
    * new controls when recorded. The old check here, "the clicked control is
@@ -296,7 +285,7 @@ export function synthesizeAssertion(
     !clickChangedUrl &&
     step.post_action_target_visible === true &&
     (step.controls_appeared ?? 0) > 0 &&
-    ["click", "check", "uncheck", "press"].includes(step.action.type)
+    CLICK_LIKE_ACTIONS.includes(step.action.type)
   ) {
     return {
       schema_version: SCHEMA_VERSION,
@@ -311,6 +300,20 @@ export function synthesizeAssertion(
     };
   }
 
+  /**
+   * Asserting the clicked control is still visible is frequently *false*: the
+   * transition routinely hides the surface the control lived on (submitting a
+   * login form, closing a modal, navigating away).
+   *
+   * Falling through to `url-matches` is both correct and stronger: the branch
+   * below labels a URL-changing click `strong`.
+   *
+   * Caught by tests/integration/pipeline.test.ts, which replayed a compiled
+   * login step against the fixture and timed out waiting for the submit button
+   * to stay visible after it had been clicked. Since ADR-0007 the
+   * non-navigating variant is caught directly by the branch above rather than
+   * inferred from the URL.
+   */
   if (wantsElement && !clickChangedUrl) {
     const landmarkPick =
       pickPreferredLandmark(newLandmarks(step)) ??

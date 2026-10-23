@@ -27,7 +27,12 @@ const REVEALED: Assertion = {
   failure_classification: "assertion_failed",
 } as unknown as Assertion;
 
-const program = (name: string): CompiledProgram => ({
+const click = (name: string) => ({
+  type: "click" as const,
+  locator_fallback_chain: [{ strategy: "role_name" as const, role: "button", name }],
+});
+
+const program = (name: string, pre: string[] = []): CompiledProgram => ({
   schema_version: "1.0.0",
   program_id: "p",
   site_key: "s",
@@ -36,10 +41,8 @@ const program = (name: string): CompiledProgram => ({
   steps: [
     {
       step_index: 0,
-      compiled_action: {
-        type: "click",
-        locator_fallback_chain: [{ strategy: "role_name", role: "button", name }],
-      },
+      ...(pre.length > 0 ? { pre_actions: pre.map(click) } : {}),
+      compiled_action: click(name),
       assertion: REVEALED,
     },
   ],
@@ -100,5 +103,42 @@ describe("controls-appeared (ADR-0026)", () => {
     const TYPED_VALUE = "CANARY-" + "VALUE-" + "4e1a";
     await page.setContent(`<main><label for="f">Alias</label><input id="f" value="${TYPED_VALUE}"></main>`);
     expect(JSON.stringify([...(await visibleControlKeys(page))])).not.toContain(TYPED_VALUE);
+  });
+
+  // #230 review: the snapshot is taken after pre-actions, right before the
+  // step's own action. Before, closing a modal counted as the whole page
+  // appearing, and a no-op own action passed.
+  const MODAL = `<div id="m" role="dialog" aria-modal="true" style="position:fixed;inset:0">
+    <button aria-label="Choose TestData" onclick="document.getElementById('m').remove()">c</button></div>`;
+
+  it("a pre-action that closes a modal does not satisfy the check for a no-op own action", async () => {
+    await page.setContent(PAGE + MODAL);
+    const result = await new ReplayRunner({ page, maxRepairsPerRun: 0 }).run(
+      program("Does nothing", ["Choose TestData"]),
+    );
+    expect(result.task_success).toBe(false);
+  }, 30_000);
+
+  it("and passes when the own action reveals something after the pre-action", async () => {
+    await page.setContent(PAGE + MODAL);
+    const result = await new ReplayRunner({ page }).run(program("Hides itself", ["Choose TestData"]));
+    expect(result.step_results[0]).toMatchObject({ outcome: "PASS", pre_action_count: 1 });
+  }, 30_000);
+
+  it("controls still rendering from before the step are not credited to it", async () => {
+    // The previous step's page finishes rendering 200 ms in; the click does nothing.
+    await page.setContent(`${PAGE}<script>setTimeout(() => {
+      const b = document.createElement("button"); b.setAttribute("aria-label", "Late pane");
+      document.querySelector("main").appendChild(b); }, 200)</script>`);
+    const result = await new ReplayRunner({ page, maxRepairsPerRun: 0 }).run(program("Does nothing"));
+    expect(result.task_success).toBe(false);
+  }, 30_000);
+
+  it("closing a modal is not 'everything appeared': the count ignores dialog-first filtering", async () => {
+    await page.setContent(PAGE + MODAL);
+    const before = await visibleControlKeys(page);
+    expect([...before].some((k) => k.endsWith("Keeps itself"))).toBe(true);
+    await page.getByRole("button", { name: "Choose TestData" }).click();
+    expect(countAppeared(before, await visibleControlKeys(page))).toBe(0);
   });
 });

@@ -64,7 +64,7 @@ export interface EvaluateAssertionOptions {
 }
 
 /** How often `controls-appeared` re-reads the page while waiting. */
-const CONTROLS_POLL_INTERVAL_MS = 150;
+const CONTROLS_POLL_INTERVAL_MS = 250;
 
 export async function evaluateAssertion(
   page: Page,
@@ -263,7 +263,11 @@ export async function evaluateAssertion(
         const deadline = Date.now() + timeout;
         let seen = 0;
         for (;;) {
-          seen = countAppeared(before, await visibleControlKeys(page));
+          // A read can fail mid-transition ("execution context was destroyed"
+          // when the click reloads a frame). That is not the answer; keep
+          // polling until the deadline, as waitFor does on the other checks.
+          const now = await visibleControlKeys(page).catch(() => undefined);
+          if (now) seen = countAppeared(before, now);
           if (seen >= want) return { outcome: "PASS" };
           if (Date.now() >= deadline) break;
           await page.waitForTimeout(CONTROLS_POLL_INTERVAL_MS);

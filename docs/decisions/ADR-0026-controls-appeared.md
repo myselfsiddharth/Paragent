@@ -38,9 +38,15 @@ after the action that were not visible before it.
 - Both sets come from `contextExpression("interactive")`, the capture the privacy boundary already
   reviews, through `visibleControlKeys()` (`src/shared/controls.ts`). No new attribute is read and
   no value is read.
-- The cap is lifted to 2,000, because a count is about the page, not the repair payload's
-  120-element budget.
-- **Only the count is persisted.** The keys stay in memory, so no name enters the trajectory.
+- Two settings differ from the repair context:
+  - **The dialog-first filtering is off.** It drops what sits behind a modal, so closing a modal
+    would otherwise count as the whole page appearing.
+  - **The cap is 10,000,** because a count is about the page, not the repair payload's 120-element
+    budget.
+- The "before" set waits for the page to **hold still**: two reads 300 ms apart that agree, within
+  2 s. Otherwise controls still rendering from the previous step would be credited to this one.
+- **Only the count is persisted,** and only for click-like steps, the only ones the compiler reads.
+  The keys stay in memory, so no name enters the trajectory.
 - A failed capture records nothing. "Could not tell" is never 0.
 
 ### Compiler: assert the step revealed something
@@ -65,18 +71,31 @@ eligibility is unchanged (7/12).
 
 ### Runner
 
-`attemptStep` snapshots the visible controls **before the first action** (pre-actions included,
-ADR-0024), so the count is of what this attempt's actions made appear. `evaluateAssertion` polls
-until `expected.count` new controls are visible or `timeout_ms` passes. A missing snapshot fails
-the check and says so; it never passes blind.
+`attemptStep` snapshots the visible controls **after the pre-actions and right before the step's
+own action** (ADR-0024), using the same "hold still" settling as the recorder. The count is
+therefore of what *the step's own action* revealed.
 
-### Recorder fix found on the way: wait for the URL to stop moving
+Snapshotting before the pre-actions, as the first version of this PR did, was wrong. A pre-action
+that closed a modal made the whole editor "appear", and a no-op own action passed (caught in
+review, with a test).
+
+`evaluateAssertion` polls until `expected.count` new controls are visible or `timeout_ms` passes. A
+read that fails mid-transition (a frame reload) is retried rather than reported. A missing snapshot
+fails the check and says so; it never passes blind.
+
+### Found on the way: a URL recorded mid-redirect
 
 The first r3 recording caught Save's URL mid-redirect. Grafana routes to `/d/{uid}/{slug}`, then
 rewrites it to add `?orgId=1`. Through ADR-0022's state-bearing rule, the compiler then required
-`orgId` to be absent there, and step 10 failed every replay on 9.5.21. `settleUrl` now waits for
-the URL to stop moving (`POST_ACTION_URL_QUIET_MS`, 300 ms) after it first changes. r2 had
-recorded the final URL by luck of timing.
+`orgId` to be absent there, and step 10 failed every replay on 9.5.21. r2 had recorded the final
+URL by luck of timing. Fixed in two places:
+
+- **Compiler, the class fix:** `settleTransientUrls()`. Nothing acts between a step's post_state
+  and the next step's pre_state, so when the two share a path and differ, the first was a transient
+  and the settled URL replaces it, whatever the recorder's timing. A different path is a real
+  navigation and is left alone.
+- **Recorder:** `settleUrl` now waits for the URL to stop moving (300 ms quiet) after it first
+  changes.
 
 ## Contract changes (additive)
 
@@ -88,11 +107,17 @@ recorded the final URL by luck of timing.
 - **r3 vs r2:** actions identical in all 12 rows. Assertions differ **only** at steps 2 and 8 (Open
   the save-dashboard drawer), both now `controls-appeared`. The recording saw 27 and 7 controls
   appear, and 0 for every fill. Pool eligibility: 7/12, unchanged.
-- **9.5.21, stub repair, 3 runs:** 12/12 every run, 0 repairs.
-- **10.0.13, scripted step-2 repair** (TestData, then Change Visualization, as ADR-0024's
-  sequence): step 2 `REPAIRED_PASS` with `pre_action_count` 1, and steps 3–5 PASS. The run stops at
-  step 6 (the panel-title field), an ordinary renamed locator that the scripted client does not
-  answer. With r2 the same repair could never pass step 2.
+- **9.5.21, stub repair, 3 runs:** 12/12 every run, 0 repairs. Wall time per run went from about
+  1.3 s to 2.3 s: the settling before the two snapshots.
+- **10.0.13, scripted step-2 repairs, with the snapshot after the pre-action:**
+
+  | Proposal | Step 2 |
+  | --- | --- |
+  | TestData, then **Change Visualization** (the right control) | `REPAIRED_PASS`, 2/2. Steps 3–5 PASS; the run then stops at step 6, a renamed field the scripted client does not answer |
+  | TestData, then an **inert** control (the panel-title text field) | **fails**: "expected at least 1 new control(s) after the action, saw 0" |
+  | TestData, then **"Search or jump to..."** (a wrong control that opens a different surface) | passes: the known weakness, see below |
+
+  With r2, no repair could pass step 2.
 
 ## Alternatives rejected
 
@@ -114,6 +139,13 @@ recorded the final URL by luck of timing.
 - **A click that only changes state in place** (a toggle, a checkbox) reveals no controls and keeps
   the old check. If such a control disappears on a later version, the same problem returns for that
   step. None in the gate task.
+- **A wrong control that opens some other surface passes.** Measured above: "Search or jump to..."
+  opens Grafana's search overlay. That is what "weak" means here, and why the step is labelled weak
+  rather than strong. The check rules out a click that did nothing, not a click that did the wrong
+  thing.
 - **Count threshold 1** is chosen, not measured. A page that adds an unrelated control (a toast
   with a button) at the same moment would pass a no-op. Not observed on the gate task.
+- **Cost.** Each snapshot is a full capture, and the poll repeats it every 250 ms until it passes or
+  times out. That is acceptable for the two steps that use it. A count-only in-page observer would
+  be cheaper if more steps adopt the check.
 - 10.4.19 → 12.2.1 are not probed with r3, and 13.0.3's step 1 is #226.

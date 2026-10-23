@@ -141,7 +141,11 @@ export const CONTEXT_ATTRIBUTE_ALLOWLIST: readonly string[] = [
  * The `level` argument is interpolated by the caller, not read from scope: the
  * body is serialized into a page that has no access to this module.
  */
-export function contextExpression(level: ContextLevel, limit: number = CONTEXT_ELEMENT_LIMIT): string {
+export function contextExpression(
+  level: ContextLevel,
+  limit: number = CONTEXT_ELEMENT_LIMIT,
+  dialogFirst: boolean = true,
+): string {
   // Interactive roles a repair could plausibly target. Deliberately not "every
   // element": a corrected action clicks, fills or selects something.
   const interactiveSelector = [
@@ -271,7 +275,8 @@ export function contextExpression(level: ContextLevel, limit: number = CONTEXT_E
     const dialogs = Array.from(document.querySelectorAll(${JSON.stringify(dialogSelector)}))
       .filter(paragentDialogOpen);
     const modals = dialogs.filter(paragentIsModal);
-    const dialog = modals.length > 0 ? modals[modals.length - 1]
+    const dialog = !${dialogFirst ? "true" : "false"} ? null
+      : modals.length > 0 ? modals[modals.length - 1]
       : dialogs.length > 0 ? dialogs[dialogs.length - 1] : null;
     let insideSet = null;
     if (dialog) {
