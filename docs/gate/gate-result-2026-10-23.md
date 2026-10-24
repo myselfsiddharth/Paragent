@@ -91,8 +91,16 @@ rows, `task_success`).
 - **Step 6, "Title the panel", 36 / 36 repaired.** The title field moved. Repairable since ADR-0028.
 - **Step 7, "Apply the panel and return to the dashboard", 18 / 18 repaired on 11.5.2 → 12.2.1.**
   It is repaired every time, so it never stops a run. But it is the third repair, and so it alone
-  moves those 18 runs from inside the ≤2 bar to outside it. **Its cause has not been
-  investigated.**
+  moves those 18 runs from inside the ≤2 bar to outside it.
+
+  **Cause: genuine action churn, not a check artifact.** A live probe on 11.5.2 (2026-10-23; a
+  probe, not a committed artifact) showed that every recorded locator for the button matches
+  nothing: the name "Apply", the test id, and the structural path. In 11.5's Scenes-based editor
+  the button is **"Back to dashboard"**, and the model repairs the click to that.
+
+  So 11.5.2 → 12.2.1 differ from the recording in three places the task touches. Three repairs is
+  what the mechanism should need, and **the ≤2 shortfall there is a property of the churn, not a
+  defect to fix.**
 - **Step 1 on 13.0.3, "Add a visualization", 0 / 6.** "Add new panel" became an "Add" menu, then a
   "Visualization" item. A one-shot repair cannot name an item that only appears after the first
   click ([#226](https://github.com/myselfsiddharth/Paragent/issues/226)).
@@ -207,7 +215,8 @@ design, and is not comparable with either.
 survive controlled version churn from 9.5 to 12.2 (three later major versions) for about 1–2% of
 the tokens of reasoning the task fresh. The failure classes that remain are named and few:
 
-- one step needing a third repair (step 7, on 11.5.2 → 12.2.1);
+- one more genuine UI change on 11.5.2 → 12.2.1 (step 7's button renamed), repaired every time but
+  taking those runs to three repairs;
 - one shape of churn the repair design cannot yet express (#226, on 13.0.3).
 
 **Does not settle:**
@@ -224,10 +233,11 @@ the tokens of reasoning the task fresh. The failure classes that remain are name
   clock in `docs/research/vertical-search/DECISION.md` applies to a PASS; this is not one.
 - **PRD §9 for EXTEND:** "extend the window, add a second site, decide on data." The cheapest
   moves, in order:
-  1. **Step 7 on 11.5.2 → 12.2.1.** Find why it needs repair. If it is a post-condition rather than
-     an action, as step 2 was (#224), it may be a compile-side fix that brings 18 runs inside the
-     ≤2 bar, with no change to repair.
-  2. **#226** for 13.0.3.
+  1. **#226** for 13.0.3, the one version where repair fails.
+  2. **Step 7 needs no fix.** It is real churn, repaired correctly every time (see above). Raising
+     task success on 11.5.2 → 12.2.1 would mean either accepting more than two repairs for a
+     three-change upgrade, or recompiling the program on a later version. The ≤2 bar itself is a
+     question for #31: it treats an upgrade that changes three things the same as a flaky replay.
   3. **A held-out check** (caveat 1) and **one live site** (caveat 2). These bear on the verdict
      more than either fix does.
 - `docs/pitch/proof-points.md`'s `[PENDING TRACK-1]` markers are **left as they are** until #31 is
@@ -235,8 +245,9 @@ the tokens of reasoning the task fresh. The failure classes that remain are name
 
 ## Open questions / what I could not verify
 
-- **Why step 7 needs repair on 11.5.2 → 12.2.1.** It is repaired every time, and the cause was not
-  looked at for this memo.
+- **Whether ≤2 repairs is the right bar for a multi-change upgrade.** Step 7 is genuine churn; a
+  version that changes three things the task touches needs three repairs. #31 should decide
+  whether the bar counts repairs per run or per changed control.
 - **Whether the result holds on anything held out:** another product, task or version. Nothing
   held out was run (caveat 1).
 - **Whether the assertion audit's load-bearing count changes on r3.** The audit was done on r1;
