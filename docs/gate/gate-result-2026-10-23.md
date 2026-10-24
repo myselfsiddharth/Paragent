@@ -25,25 +25,30 @@ is 50%, short of 90%. Repair costs 1.4% of a fresh run, nowhere near the 70% kil
   ≤2 bar.
 - **13.0.3:** fails at step 1 on a control that only appears after another click (#226).
 
-Every number below comes from committed files and was produced by `scripts/gate-memo-figures.mjs`.
-**Read the caveats before quoting any of them.** The program and the repair design were corrected
+**Read the caveats before quoting any number.** The program and the repair design were corrected
 against these same eight versions.
 
 All figures are from `experiments/gate-v1/results/2026-10-23/` unless stated otherwise. That
-directory holds `report/report.json`, `metrics.ndjson`, `matrix-run.json` and
-`fresh-baseline/baseline.json`. To reprint every figure:
-`node scripts/gate-memo-figures.mjs experiments/gate-v1/results/2026-10-23`.
+directory holds `report/report.json`, `metrics.ndjson`, `matrix-run.json`,
+`fresh-baseline/baseline.json`, and `command.sh` (the exact command and commit). To reprint and
+check every figure:
+
+`node --import tsx scripts/gate-memo-figures.ts experiments/gate-v1/results/2026-10-23`
+
+The script recomputes the §9 metrics from the raw `metrics.ndjson` with the project's own
+aggregator and compares them with `report.json`. It also compares the committed fresh baseline
+with the cost the run used, and exits 1 on any mismatch. Both committed runs pass.
 
 ## What was run
 
 | | |
 | --- | --- |
-| Code | `main` at `648e0a7` (#233) |
+| Code | `main` at `648e0a7` (#233), per `command.sh` |
 | Program | `artifacts/compiled/traj-gate-live-create-stat-dashboard-from-testdata-9.5.21-r3.bundle.json`: the ADR-0006 gate task, 12 steps, recorded on 9.5.21 ([ADR-0026](../decisions/ADR-0026-controls-appeared.md)) |
 | Matrix | All 8 pins in `scripts/testbed/matrix.json`, 6 runs each, live, one seeded container per pin. None skipped (`matrix-run.json` `versions_skipped: []`) |
-| Repair | `glm-5-3` on ASU's Voyager gateway, temperature 0 ([ADR-0027](../decisions/ADR-0027-gate-model-and-repair-cap.md)). No repair cap; each run bounded by a 300 s budget (`repair_cap: null`). Repair is told the task goal (`--gate-task-goal`, ADR-0025). Context level `interactive` |
+| Repair | `glm-5-3` on ASU's Voyager gateway, temperature 0 ([ADR-0027](../decisions/ADR-0027-gate-model-and-repair-cap.md)). No repair cap (`matrix-run.json` `repair_cap: null`); each run bounded by a 300 s budget (run rows `wall_clock_budget_ms`). Repair is told the task goal (`--gate-task-goal`, ADR-0025). Context level `interactive` (run rows `repair_context_level`) |
 | Fresh baseline | Same model and gateway: `gate:baseline --provider voyager --runs 8 --version 9.5.21`, same program and goal text (`fresh-baseline/baseline.json`) |
-| Bindings | `dashboard_title=Paragent Gate {run}`, `panel_title=Gate Panel`, `series_alias=gate`, `series_count=5` |
+| Bindings | `dashboard_title=Paragent Gate {run}`, `panel_title=Gate Panel`, `series_alias=gate`, `series_count=5` (`command.sh`) |
 
 ## The numbers (`report/report.json`, `.metrics`)
 
@@ -77,7 +82,7 @@ rows, `task_success`).
 | 11.5.2 | 6 / 6 | **0 / 6** | 3 | steps 2, 6, **7** |
 | 12.0.0 | 6 / 6 | **0 / 6** | 3 | steps 2, 6, **7** |
 | 12.2.1 | 6 / 6 | **0 / 6** | 3 | steps 2, 6, **7** |
-| 13.0.3 | **0 / 6** | 0 / 6 | 3 | **stops at step 1**, `REPAIR_EXHAUSTED` |
+| 13.0.3 | **0 / 6** | 0 / 6 | 3 attempts, **none successful** | **stops at step 1**, `REPAIR_EXHAUSTED` well inside the time budget |
 
 **What each repaired step was** (step rows, non-`PASS` outcomes):
 
@@ -91,6 +96,11 @@ rows, `task_success`).
 - **Step 1 on 13.0.3, "Add a visualization", 0 / 6.** "Add new panel" became an "Add" menu, then a
   "Visualization" item. A one-shot repair cannot name an item that only appears after the first
   click ([#226](https://github.com/myselfsiddharth/Paragent/issues/226)).
+  - The "3" in the table counts attempts on 13.0.3, not successful repairs as on 11.5.2–12.2.1.
+  - What ended each run after the third attempt is **not recorded** in the committed rows: the
+    metrics contract carries no stop reason. It could be the model proposing nothing, or the
+    repeat guard refusing a sequence that already failed on an unchanged page (ADR-0027). It was
+    not the time budget (`budget_exhausted: false`).
 
 ## Which document controls, and are the thresholds binding
 
@@ -130,9 +140,14 @@ in [#31](https://github.com/myselfsiddharth/Paragent/issues/31).
    protocol is 3 runs a day for 14 days against a live site. This is a version matrix instead.
    Pivot brief §4 requires confirming against one live site. **That has not happened.**
 
-3. **Six runs per version are not six independent samples.** At temperature 0 every version
-   behaved identically across its six runs (the per-version table has no mixed rows). The sample
-   floor is met in count, but the effective sample is closer to 8 versions × 1.
+3. **Six runs per version are far from six independent samples.** At temperature 0, every version
+   in this run had identical outcomes across its six runs (no mixed rows in the per-version table).
+   Runs are not fully deterministic, though:
+   - in the same-setup 2026-10-22 run, repair counts varied within a version (11.5.2: 3, 4 and 5);
+   - fresh-baseline completions varied between sessions (1/8, then 0/6).
+
+   The sample floor is met in count, but the effective sample is much smaller than 48, and
+   repeated runs per version mostly measure the same path.
 
 4. **Weak assertions soften the step-validity number.** r3 has 6 strong and 6 weak checks.
    - Strong steps were valid on first pass **90.9%** of the time (240 / 264).
@@ -142,14 +157,17 @@ in [#31](https://github.com/myselfsiddharth/Paragent/issues/31).
    8), for example, passes if a wrong panel opens (ADR-0026). `docs/gate/assertion-audit.md`
    audits r1, and **has not been re-run on r3**.
 
-5. **The fresh baseline is a lower bound, and a thin one.**
+5. **The fresh baseline is thin, and mostly runs that did not finish.**
    - 8 attempted, **6 measured**. 2 were dropped after Voyager gateway transport errors (TLS);
      they are flagged `unmeasured` and excluded.
-   - **0 of 6** completed the task within 30 turns.
+   - **0 of 6** completed the task within 30 turns in this session.
 
-   So the fresh cost is the cost of failing to finish, not of finishing. That biases the 1.4%
-   ratio *against* Paragent, but it also means the comparison is between a repair that finishes
-   and a fresh run that does not.
+   Fresh runs on this model *can* finish. The same-setup 2026-10-22 baseline, committed in this
+   PR, has 1 of 8 completing (`2026-10-22-fill-bug/fresh-baseline/baseline.json`). That one run
+   cost 345,142 input tokens over 30 turns, within the range of the runs that did not finish. So
+   the denominator is roughly what fresh reasoning costs whether or not it finishes, not a
+   cheapened figure. But it comes from runs that mostly fail the task, and the ratio compares a
+   repair that finishes with a fresh run that usually does not.
 
 6. **One model, not Claude.** glm-5-3, open-weight, on one academic gateway. On this same task, a
    different model (qwen3-235b) could not do the step-2 repair at all (ADR-0025). The numbers are
@@ -164,10 +182,17 @@ when no repaired fill step could carry its value.
 
 | | 2026-10-22 (fill bug) | 2026-10-23 |
 | --- | --- | --- |
+| §9 sample floor (≥42 runs, ≥400 step executions) | **not met**: 48 runs, 336 step executions | met: 48 / 516 |
+| Steps never attempted | 240 | 60 |
 | Step-level replay-validity | 76.8% (258 / 336) | 81.4% (420 / 516) |
 | Task success ≤2 repairs | 12.5% (6 / 48) | 50.0% (24 / 48) |
 | Task success, any repairs | 6 / 48 | 42 / 48 |
 | Repair vs fresh, tokens | 1.5% | 1.4% |
+| Repair vs fresh, wall-clock | 14.3% | 6.0% |
+
+The 2026-10-22 run is **below the §9 floor**, and its step-validity is over a different, smaller
+set of steps: runs stopped at step 6, so steps 7–11 were never counted. The step-validity rows are
+therefore not a like-for-like comparison. The task-success rows are, since both cover 48 runs.
 
 That run stopped every 10.0.13 → 12.2.1 run at step 6. The only code change between the two runs
 is [ADR-0028](../decisions/ADR-0028-fill-repair-binding.md) (#233), so the step-validity and
@@ -216,5 +241,6 @@ the tokens of reasoning the task fresh. The failure classes that remain are name
   held out was run (caveat 1).
 - **Whether the assertion audit's load-bearing count changes on r3.** The audit was done on r1;
   only the strong/weak split above is measured for r3.
-- **Whether a fresh run that finishes costs much more than one that runs out of turns.** No fresh
-  run finished in this baseline, so the ratio's denominator is a cost of not finishing.
+- **Whether finishing fresh costs much more than running out of turns.** One completed fresh run
+  in the committed data cost about the same as those that did not (caveat 5). One run is not a
+  measurement.

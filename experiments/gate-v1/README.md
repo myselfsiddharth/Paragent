@@ -261,5 +261,8 @@ Empty NDJSON → scaffold with `status: no_data` and null values (never invented
 - `results/2026-10-23/`: the run behind [gate-result-2026-10-23](../../docs/gate/gate-result-2026-10-23.md).
 - `results/2026-10-22-fill-bug/`: the same matrix before #233, kept for the before/after comparison.
 
-`node scripts/gate-memo-figures.mjs results-dir` prints every figure the memo cites from these files.
+From the repo root, `node --import tsx scripts/gate-memo-figures.ts experiments/gate-v1/results/<date>`
+prints every figure the memo cites. It recomputes the §9 metrics from `metrics.ndjson`, checks
+them and the fresh baseline against the committed report, and exits 1 on any mismatch. Each
+directory's `command.sh` is the exact command and commit that produced it.
 
