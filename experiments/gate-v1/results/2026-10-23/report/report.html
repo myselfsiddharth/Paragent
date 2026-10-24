@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Gate-v1 amortized report</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; }
+    table { border-collapse: collapse; width: 100%; max-width: 960px; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }
+    th { background: #f0f0f0; }
+    .meta { color: #555; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Gate-v1 amortized report</h1>
+  <p class="meta">generated_at=2026-10-23T21:37:01.059Z · step_rows=516 · run_rows=48</p>
+  <p class="meta">Empty or unwired inputs yield status=no_data and null values — never invented rates.</p>
+  <p class="meta">amortization: 0 one-time program-build payment(s) across 0 distinct build(s) — the amortized curve is no_data until one is measured.</p>
+  <p class="meta">truncation: 0 of 48 run(s) stopped on their wall-clock budget; 60 step(s) were never attempted and are in no denominator below.</p>
+  <p class="meta">repair shape (ADR-0024): 36 of 90 repaired step(s) inserted an action before the step's own; 0 first-pass-valid step(s) ran inserted actions. Each counts as one repair and one step below.</p>
+  <table>
+    <thead><tr><th>metric</th><th>status</th><th>value</th><th>formula</th></tr></thead>
+    <tbody>
+<tr>
+  <td>step-level replay-validity</td>
+  <td>computed</td>
+  <td>0.813953488372093</td>
+  <td>count(replay_valid=true) / count(compiled steps executed)</td>
+</tr>
+<tr>
+  <td>task-level success (with ≤2 repairs/run)</td>
+  <td>computed</td>
+  <td>0.5</td>
+  <td>count(success_with_le_2_repairs=true) / count(runs)</td>
+</tr>
+<tr>
+  <td>repair cost vs fresh (tokens)</td>
+  <td>computed</td>
+  <td>0.014048161522368383</td>
+  <td>mean(cost_repair.tokens) / mean(cost_fresh.tokens)</td>
+</tr>
+<tr>
+  <td>repair cost vs fresh (wall-clock)</td>
+  <td>computed</td>
+  <td>0.06034985881442112</td>
+  <td>mean(cost_repair.wall_clock_ms) / mean(cost_fresh.wall_clock_ms)</td>
+</tr>
+<tr>
+  <td>self-heal success rate</td>
+  <td>computed</td>
+  <td>0.8571428571428571</td>
+  <td>count(self_healed=true) / count(runs with steps_replay_valid &lt; steps_total)</td>
+</tr>
+<tr>
+  <td>time-to-repair (mean ms)</td>
+  <td>computed</td>
+  <td>8504.388888888889</td>
+  <td>mean(time_to_repair_total_ms) over runs with repairs</td>
+</tr>
+<tr>
+  <td>amortized tokens/task over N runs</td>
+  <td>no_data</td>
+  <td>null</td>
+  <td>(sum(cost_program_build where present + cost_repair + cost_replay) over first N runs) / N — no_data unless some run in the window carries a measured cost_program_build, and no_data if any run in the window has repair_cost_measured=false</td>
+</tr>
+<tr>
+  <td>cache hit-rate over N runs</td>
+  <td>no_data</td>
+  <td>null</td>
+  <td>count(program_source=cache AND replay_valid=true) / count(program_source=cache)</td>
+</tr>
+    </tbody>
+  </table>
+  <h2>Amortized tokens chart</h2>
+  <img src="amortized.svg" alt="amortized tokens over N" width="640" height="320"/>
+  <h2>Cache hit-rate chart</h2>
+  <p class="meta">The mechanism behind the curve above: amortized cost shows the effect, hit-rate shows why. A hit is <code>program_source=cache</code> <strong>and</strong> <code>replay_valid</code> — a repaired step is a miss because it cost model tokens. Steps from a file-loaded program carry no provenance and are in no denominator.</p>
+  <img src="hit-rate.svg" alt="cache hit-rate over N" width="640" height="320"/>
+</body>
+</html>

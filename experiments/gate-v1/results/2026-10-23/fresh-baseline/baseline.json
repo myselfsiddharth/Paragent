@@ -1,0 +1,129 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "fresh_baseline_run",
+  "generated_at": "2026-10-23T21:06:29.418Z",
+  "dry_run": false,
+  "usable": true,
+  "model_id": "glm-5-3",
+  "provider": "voyager",
+  "effort": "n/a (voyager)",
+  "testbed_version": "9.5.21",
+  "site_key": "grafana-oss@9.5.21",
+  "task_key": "create-stat-dashboard-from-testdata",
+  "task_goal": "Create a new dashboard. Add a panel to it using the TestData data source, and configure the panel as a Stat visualization with a query alias and a series count of your choosing. Give the panel a title. Apply the panel back to the dashboard, then save the dashboard under a title of your choosing. Confirm the saved dashboard appears in the dashboards list. The task is done once the dashboard is saved and visible in that list.",
+  "runs_attempted": 8,
+  "measured_runs": 6,
+  "successes": 0,
+  "runs": [
+    {
+      "run_id": "ec67acd1-4d73-4645-94ce-92895f2607e0",
+      "task_success": false,
+      "tokens_in": 201634,
+      "tokens_out": 2629,
+      "wall_clock_ms": 109394,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=140800)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "5ebfeab0-aed3-4b67-867f-8da4884c44df",
+      "task_success": false,
+      "tokens_in": 290730,
+      "tokens_out": 2329,
+      "wall_clock_ms": 170644,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=186752)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "9bfd1755-0f90-4e55-b85d-0d60f0d8c9a0",
+      "task_success": false,
+      "tokens_in": 163347,
+      "tokens_out": 2158,
+      "wall_clock_ms": 100366,
+      "model_id": "glm-5-3",
+      "turns": 20,
+      "notes": "fresh-baseline request failed on turn 21: chat transport failed: ERR_SSL_SSL/TLS_ALERT_BAD_RECORD_MAC 80BF590202000000:error:0A0003FC:SSL routines:ssl3_read_bytes:ssl/tls alert bad record mac:../deps/openssl/openssl/ssl/record/rec_layer_s3.c: (provider=voyager temperature=0 cached_prompt_tokens=112768)",
+      "unmeasured": true,
+      "aborted": "transport"
+    },
+    {
+      "run_id": "35892b9f-54e3-41d2-b401-929e5703cbfd",
+      "task_success": false,
+      "tokens_in": 113618,
+      "tokens_out": 2252,
+      "wall_clock_ms": 113006,
+      "model_id": "glm-5-3",
+      "turns": 17,
+      "notes": "fresh-baseline request failed on turn 18: chat transport failed: ERR_SSL_SSL/TLS_ALERT_BAD_RECORD_MAC 80BF590202000000:error:0A0003FC:SSL routines:ssl3_read_bytes:ssl/tls alert bad record mac:../deps/openssl/openssl/ssl/record/rec_layer_s3.c: (provider=voyager temperature=0 cached_prompt_tokens=79104)",
+      "unmeasured": true,
+      "aborted": "transport"
+    },
+    {
+      "run_id": "751bc9ca-9c22-4971-933c-620308bfdc20",
+      "task_success": false,
+      "tokens_in": 313853,
+      "tokens_out": 3003,
+      "wall_clock_ms": 104304,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=254080)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "6d873a10-f36e-4023-957d-c9e29042ab1c",
+      "task_success": false,
+      "tokens_in": 267153,
+      "tokens_out": 3332,
+      "wall_clock_ms": 144373,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=184960)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "40af33b1-4604-4395-8642-cedffe817291",
+      "task_success": false,
+      "tokens_in": 373815,
+      "tokens_out": 3192,
+      "wall_clock_ms": 178844,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=293888)",
+      "unmeasured": false
+    },
+    {
+      "run_id": "27d8ab2a-4047-4647-b130-40a54d7982fc",
+      "task_success": false,
+      "tokens_in": 279912,
+      "tokens_out": 3067,
+      "wall_clock_ms": 134596,
+      "model_id": "glm-5-3",
+      "turns": 30,
+      "notes": "max turns (30) exhausted without a done decision (provider=voyager temperature=0 cached_prompt_tokens=191744)",
+      "unmeasured": false
+    }
+  ],
+  "mean_cost_fresh": {
+    "tokens_in": 287850,
+    "tokens_out": 2925,
+    "wall_clock_ms": 140359,
+    "model_id": "glm-5-3"
+  },
+  "spread": {
+    "tokens_in": {
+      "min": 201634,
+      "max": 373815
+    },
+    "tokens_out": {
+      "min": 2329,
+      "max": 3332
+    },
+    "wall_clock_ms": {
+      "min": 104304,
+      "max": 178844
+    }
+  }
+}
